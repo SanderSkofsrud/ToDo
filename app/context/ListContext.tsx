@@ -72,10 +72,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   const loadLists = useCallback(async () => {
     try {
       const storedLists = await loadData<List[]>('lists');
-      const initialLists =
-        storedLists && storedLists.length > 0
-          ? storedLists
-          : [{ id: generateUniqueId(), name: '' }];
+      const initialLists = storedLists || [];
       setLists(initialLists);
     } catch (e) {
       console.error('Error loading lists:', e);

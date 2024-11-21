@@ -97,7 +97,30 @@ const HomeScreen = () => {
         shadowRadius: 4,
         elevation: 5,
       },
-      // Removed searchContainer as it's no longer needed
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Spacing.large,
+      },
+      emptyText: {
+        fontSize: FontSizes.large,
+        color: theme.text,
+        marginBottom: Spacing.medium,
+      },
+      emptyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.primary,
+        paddingVertical: Spacing.small,
+        paddingHorizontal: Spacing.medium,
+        borderRadius: BorderRadius.medium,
+      },
+      emptyButtonText: {
+        color: theme.text,
+        fontSize: FontSizes.medium,
+        marginLeft: Spacing.small,
+      },
     });
 
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -211,11 +234,10 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <View style={styles.container}>
-        {/* Embed the toggle button inside the SearchBar */}
         <SearchBar
           value={searchText}
           onChangeText={setSearchText}
-          style={{ marginBottom: Spacing.medium }} // Optional: Additional styling if needed
+          style={{ marginBottom: Spacing.medium }}
         >
           <TouchableOpacity
             onPress={toggleTheme}
@@ -231,17 +253,25 @@ const HomeScreen = () => {
             />
           </TouchableOpacity>
         </SearchBar>
-        <FlatList
-          data={filteredLists}
-          renderItem={renderCard}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.flatListContent}
-          columnWrapperStyle={styles.columnWrapper}
-          accessible={true}
-          accessibilityLabel="List of all your lists"
-          accessibilityHint="Displays all your created lists"
-        />
+
+        {filteredLists.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No lists available.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredLists}
+            renderItem={renderCard}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            contentContainerStyle={styles.flatListContent}
+            columnWrapperStyle={styles.columnWrapper}
+            accessible={true}
+            accessibilityLabel="List of all your lists"
+            accessibilityHint="Displays all your created lists"
+          />
+        )}
+
         <TouchableOpacity
           onPress={handleAddList}
           style={styles.floatingButton}
