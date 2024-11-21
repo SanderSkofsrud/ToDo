@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -45,6 +45,9 @@ const ListItem: React.FC<ListItemProps> = ({
                                            }) => {
   const { theme } = useTheme();
 
+  /**
+   * Handles the press event with vibration feedback.
+   */
   const handlePress = useCallback(() => {
     Vibration.vibrate(50);
     if (onPress) {
@@ -52,28 +55,37 @@ const ListItem: React.FC<ListItemProps> = ({
     }
   }, [onPress]);
 
-  const styles = StyleSheet.create({
-    container: {
-      marginBottom: Spacing.small,
-      flexDirection: 'row',
-      alignItems: 'center',
-      opacity: dragging ? 0.7 : 1,
-    },
-    icon: {
-      marginRight: Spacing.small,
-    },
-    content: {
-      flex: 1,
-      padding: Spacing.medium,
-      borderRadius: BorderRadius.large,
-      backgroundColor: completed ? theme.gray[700] : theme.gray[800],
-    },
-    text: {
-      fontSize: FontSizes.medium,
-      color: completed ? theme.gray[500] : theme.text,
-      textDecorationLine: completed ? 'line-through' : 'none',
-    },
-  });
+  /**
+   * Generates styles based on the current theme and dragging state.
+   * @param theme - The current theme object.
+   * @param dragging - Whether the item is being dragged.
+   * @returns A StyleSheet object.
+   */
+  const getStyles = (theme: any, dragging: boolean) =>
+    StyleSheet.create({
+      container: {
+        marginBottom: Spacing.small,
+        flexDirection: 'row',
+        alignItems: 'center',
+        opacity: dragging ? 0.7 : 1,
+      },
+      icon: {
+        marginRight: Spacing.small,
+      },
+      content: {
+        flex: 1,
+        padding: Spacing.medium,
+        borderRadius: BorderRadius.large,
+        backgroundColor: completed ? theme.gray[700] : theme.gray[800],
+      },
+      text: {
+        fontSize: FontSizes.medium,
+        color: completed ? theme.gray[500] : theme.text,
+        textDecorationLine: completed ? 'line-through' : 'none',
+      },
+    });
+
+  const styles = useMemo(() => getStyles(theme, !!dragging), [theme, dragging, completed]);
 
   return (
     <TouchableOpacity
@@ -84,6 +96,7 @@ const ListItem: React.FC<ListItemProps> = ({
       accessibilityLabel={`${text} ${completed ? 'completed' : 'not completed'}`}
       accessibilityHint="Toggles the completion state of this item"
     >
+      {/* Checkbox Icon */}
       <Ionicons
         name={completed ? 'checkbox' : 'square-outline'}
         size={24}
@@ -91,6 +104,8 @@ const ListItem: React.FC<ListItemProps> = ({
         style={styles.icon}
         accessibilityIgnoresInvertColors
       />
+
+      {/* Item Content */}
       <View style={styles.content}>
         <Text style={styles.text}>{text}</Text>
       </View>

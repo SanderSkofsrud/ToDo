@@ -1,43 +1,50 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import { FontSizes, Spacing, BorderRadius } from './theme';
+import { FontSizes, Spacing, BorderRadius, Theme } from './theme';
+import { useMemo } from 'react';
 
 /**
  * Generates common styles based on the current theme.
- * @returns StyleSheet
+ * @returns An object containing common styles.
  */
 export const useCommonStyles = () => {
   const { theme } = useTheme();
 
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-      padding: Spacing.medium,
-    },
-    button: {
-      backgroundColor: theme.primary,
-      paddingVertical: Spacing.small,
-      paddingHorizontal: Spacing.medium,
-      borderRadius: BorderRadius.medium,
-      alignItems: 'center',
-      marginTop: Spacing.medium,
-    },
-    buttonText: {
-      color: theme.text,
-      fontSize: FontSizes.medium,
-      fontWeight: '600',
-    },
-    textInput: {
-      backgroundColor: 'rgba(31, 31, 31, 0.5)',
-      borderWidth: 1,
-      borderColor: theme.gray[700],
-      borderRadius: BorderRadius.medium,
-      paddingVertical: Spacing.small,
-      paddingHorizontal: Spacing.medium,
-      fontSize: FontSizes.medium,
-      color: theme.text,
-    },
-    // Additional reusable styles can be added here
-  });
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.background,
+          padding: Spacing.medium,
+        } as ViewStyle,
+        button: {
+          backgroundColor: theme.primary,
+          paddingVertical: Spacing.small,
+          paddingHorizontal: Spacing.medium,
+          borderRadius: BorderRadius.medium,
+          alignItems: 'center',
+          marginTop: Spacing.medium,
+        } as ViewStyle,
+        buttonText: {
+          color: theme.text,
+          fontSize: FontSizes.medium,
+          fontWeight: '600',
+        } as TextStyle,
+        textInput: {
+          backgroundColor: 'rgba(31, 31, 31, 0.5)',
+          borderWidth: 1,
+          borderColor: theme.gray[700],
+          borderRadius: BorderRadius.medium,
+          paddingVertical: Spacing.small,
+          paddingHorizontal: Spacing.medium,
+          fontSize: FontSizes.medium,
+          color: theme.text,
+        } as TextStyle,
+        // Add more reusable styles as needed
+      }),
+    [theme]
+  );
+
+  return styles;
 };

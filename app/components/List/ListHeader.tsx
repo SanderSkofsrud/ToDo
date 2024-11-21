@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useEffect } from 'react';
+import React, { forwardRef, useRef, useEffect, useMemo } from 'react';
 import { TextInput, TextInputProps, StyleSheet } from 'react-native';
 import { FontSizes, Spacing } from '../../styles/theme';
 import { useTheme } from '../../context/ThemeContext';
@@ -40,16 +40,24 @@ const ListHeader = forwardRef<TextInput, ListHeaderProps>(
       }
     }, [focusRef]);
 
-    const styles = StyleSheet.create({
-      headerTitle: {
-        color: theme.text,
-        fontSize: FontSizes.large,
-        fontWeight: 'bold',
-        flex: 1,
-        paddingVertical: Spacing.tiny,
-        paddingRight: 40, // Prevent overlapping with other header elements
-      },
-    });
+    /**
+     * Generates styles based on the current theme.
+     * @param theme - The current theme object.
+     * @returns A StyleSheet object.
+     */
+    const getStyles = (theme: any) =>
+      StyleSheet.create({
+        headerTitle: {
+          color: theme.text,
+          fontSize: FontSizes.large,
+          fontWeight: 'bold',
+          flex: 1,
+          paddingVertical: Spacing.tiny,
+          paddingRight: 40, // Prevent overlapping with other header elements
+        },
+      });
+
+    const styles = useMemo(() => getStyles(theme), [theme]);
 
     return (
       <TextInput

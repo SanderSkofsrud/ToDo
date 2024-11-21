@@ -56,16 +56,6 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   const [lists, setLists] = useState<List[]>([]);
   const [listData, setListData] = useState<Record<string, Item[]>>({});
 
-  useEffect(() => {
-    loadLists();
-  }, []);
-
-  useEffect(() => {
-    if (lists.length > 0) {
-      loadListItems();
-    }
-  }, [lists]);
-
   /**
    * Generates a unique identifier.
    * @returns A unique string.
@@ -83,7 +73,9 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedLists = await loadData<List[]>('lists');
       const initialLists =
-        storedLists || [{ id: generateUniqueId(), name: '' }];
+        storedLists && storedLists.length > 0
+          ? storedLists
+          : [{ id: generateUniqueId(), name: '' }];
       setLists(initialLists);
     } catch (e) {
       console.error('Error loading lists:', e);
@@ -105,6 +97,16 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
     }
     setListData(data);
   }, [lists]);
+
+  useEffect(() => {
+    loadLists();
+  }, [loadLists]);
+
+  useEffect(() => {
+    if (lists.length > 0) {
+      loadListItems();
+    }
+  }, [lists, loadListItems]);
 
   /**
    * Saves the lists to storage.
@@ -176,7 +178,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   const addItem = useCallback(
     async (listId: string, text: string) => {
       const newItem: Item = { id: generateUniqueId(), text, completed: false };
-      const updatedItems = [newItem, ...(listData[listId] || [])];
+      const updatedItems = [...(listData[listId] || []), newItem];
       await saveData(listId, updatedItems);
       setListData((prevData) => ({
         ...prevData,

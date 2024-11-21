@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useState } from 'react';
+import React, { useContext, useCallback, useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -35,6 +35,74 @@ const HomeScreen = () => {
   const { theme, toggleTheme, colorScheme } = useTheme();
 
   /**
+   * Generates styles based on the current theme.
+   * @param theme - The current theme object.
+   * @returns A StyleSheet object.
+   */
+  const getStyles = (theme: any) =>
+    StyleSheet.create({
+      safeArea: {
+        flex: 1,
+        backgroundColor: theme.background,
+      },
+      container: {
+        flex: 1,
+        paddingHorizontal: Spacing.medium,
+        paddingTop: Spacing.large,
+        backgroundColor: theme.background,
+      },
+      flatListContent: {
+        paddingBottom: 100,
+        paddingTop: 20,
+      },
+      columnWrapper: {
+        justifyContent: 'space-between',
+      },
+      card: {
+        padding: Spacing.medium,
+        borderRadius: BorderRadius.xlarge,
+        width: '48%',
+        borderColor: theme.gray[700],
+        borderWidth: 3,
+        marginBottom: Spacing.medium,
+      },
+      cardTitle: {
+        color: theme.text,
+        fontSize: FontSizes.xlarge,
+        fontWeight: 'bold',
+        marginBottom: Spacing.small,
+      },
+      cardItemText: {
+        color: theme.gray[300],
+        fontSize: FontSizes.medium,
+      },
+      cardMoreText: {
+        color: theme.gray[500],
+        fontSize: FontSizes.small,
+        marginTop: Spacing.small,
+      },
+      floatingButton: {
+        position: 'absolute',
+        bottom: Spacing.large,
+        right: Spacing.large,
+        backgroundColor: theme.primary,
+        width: 64,
+        height: 64,
+        borderRadius: BorderRadius.large,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+      // Removed searchContainer as it's no longer needed
+    });
+
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
+  /**
    * Filters the lists based on the search text.
    * @returns An array of filtered lists.
    */
@@ -53,7 +121,7 @@ const HomeScreen = () => {
     });
   }, [searchText, lists, listData]);
 
-  const filteredLists = filterLists();
+  const filteredLists = useMemo(() => filterLists(), [filterLists]);
 
   /**
    * Handles adding a new list and navigating to it.
@@ -116,148 +184,73 @@ const HomeScreen = () => {
         <TouchableOpacity
           onPress={() => router.push(`/list/${item.id}`)}
           onLongPress={() => confirmDeleteList(item)}
-          style={getStyles(theme).card}
+          style={styles.card}
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel={`List: ${item.name || 'Unnamed'}`}
           accessibilityHint="Tap to open the list, long press to delete"
         >
-          <Text style={getStyles(theme).cardTitle}>
+          <Text style={styles.cardTitle}>
             {item.name || 'Unnamed'}
           </Text>
           {uncompletedItems.slice(0, 5).map((listItem) => (
-            <Text key={listItem.id} style={getStyles(theme).cardItemText}>
-              • {listItem.text}
+            <Text key={listItem.id} style={styles.cardItemText}>
+              {listItem.text}
             </Text>
           ))}
           {uncompletedItems.length > 5 && (
-            <Text style={getStyles(theme).cardMoreText}>+ more items...</Text>
+            <Text style={styles.cardMoreText}>+ more items...</Text>
           )}
         </TouchableOpacity>
       );
     },
-    [confirmDeleteList, listData, router, theme]
+    [confirmDeleteList, listData, router, styles]
   );
 
-  /**
-   * Generates styles based on the current theme.
-   * @param theme - The current theme object.
-   * @returns A StyleSheet object.
-   */
-  const getStyles = (theme: any) =>
-    StyleSheet.create({
-      card: {
-        padding: Spacing.medium,
-        borderRadius: BorderRadius.xlarge,
-        width: '48%',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderColor: theme.gray[700],
-        borderWidth: 3,
-        marginBottom: Spacing.medium,
-      },
-      cardTitle: {
-        color: theme.text,
-        fontSize: FontSizes.xlarge,
-        fontWeight: 'bold',
-        marginBottom: Spacing.small,
-      },
-      cardItemText: {
-        color: theme.gray[300],
-        fontSize: FontSizes.medium,
-      },
-      cardMoreText: {
-        color: theme.gray[500],
-        fontSize: FontSizes.small,
-        marginTop: Spacing.small,
-      },
-      floatingButton: {
-        position: 'absolute',
-        bottom: Spacing.large,
-        right: Spacing.large,
-        backgroundColor: theme.primary,
-        width: 64,
-        height: 64,
-        borderRadius: BorderRadius.large,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-      },
-      toggleThemeButton: {
-        position: 'absolute',
-        top: Spacing.large,
-        right: Spacing.large,
-        backgroundColor: theme.primary,
-        width: 48,
-        height: 48,
-        borderRadius: BorderRadius.large,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-      },
-      container: {
-        flex: 1,
-        position: 'relative',
-        paddingHorizontal: Spacing.medium,
-        paddingTop: Spacing.large,
-        backgroundColor: theme.background,
-      },
-      flatListContent: {
-        paddingBottom: 100,
-        paddingTop: 20,
-      },
-      columnWrapper: {
-        justifyContent: 'space-between',
-      },
-      safeArea: {
-        flex: 1,
-        backgroundColor: theme.background,
-      },
-    });
-
   return (
-    <SafeAreaView style={getStyles(theme).safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <View style={getStyles(theme).container}>
-        <SearchBar value={searchText} onChangeText={setSearchText} />
+      <View style={styles.container}>
+        {/* Embed the toggle button inside the SearchBar */}
+        <SearchBar
+          value={searchText}
+          onChangeText={setSearchText}
+          style={{ marginBottom: Spacing.medium }} // Optional: Additional styling if needed
+        >
+          <TouchableOpacity
+            onPress={toggleTheme}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Toggle theme"
+            accessibilityHint="Switches between light and dark mode"
+          >
+            <Ionicons
+              name={colorScheme === 'dark' ? 'sunny' : 'moon'}
+              size={24}
+              color={theme.text}
+            />
+          </TouchableOpacity>
+        </SearchBar>
         <FlatList
           data={filteredLists}
           renderItem={renderCard}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          contentContainerStyle={getStyles(theme).flatListContent}
-          columnWrapperStyle={getStyles(theme).columnWrapper}
+          contentContainerStyle={styles.flatListContent}
+          columnWrapperStyle={styles.columnWrapper}
+          accessible={true}
+          accessibilityLabel="List of all your lists"
+          accessibilityHint="Displays all your created lists"
         />
         <TouchableOpacity
           onPress={handleAddList}
-          style={getStyles(theme).floatingButton}
+          style={styles.floatingButton}
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel="Add new list"
           accessibilityHint="Creates a new list"
         >
           <Ionicons name="add" size={32} color={theme.text} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={toggleTheme}
-          style={getStyles(theme).toggleThemeButton}
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="Toggle theme"
-          accessibilityHint="Switches between light and dark mode"
-        >
-          <Ionicons
-            name={colorScheme === 'dark' ? 'sunny' : 'moon'}
-            size={24}
-            color={theme.text}
-          />
         </TouchableOpacity>
         <ConfirmationDialog
           visible={isDialogVisible}

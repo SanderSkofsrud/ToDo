@@ -1,6 +1,7 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useMemo } from 'react';
 import { TextInput, TextInputProps, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { Theme } from '@/app/styles/theme';
 
 /**
  * Interface for input reference methods.
@@ -39,18 +40,26 @@ const Input = forwardRef<InputRef, CustomTextInputProps>((props, ref) => {
     },
   }));
 
-  const styles = StyleSheet.create({
-    input: {
-      backgroundColor: 'rgba(31, 31, 31, 0.5)',
-      borderWidth: 1,
-      borderColor: theme.gray[700],
-      borderRadius: 8,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      color: theme.text,
-    },
-  });
+  /**
+   * Generates styles based on the current theme.
+   * @param theme - The current theme object.
+   * @returns A StyleSheet object.
+   */
+  const getStyles = (theme: Theme) =>
+    StyleSheet.create({
+      input: {
+        backgroundColor: theme.mode === 'dark' ? 'rgba(49,48,48,0.5)' : '#F0F0F0',
+        borderWidth: 1,
+        borderColor: theme.gray[700],
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        fontSize: 16,
+        color: theme.text,
+      },
+    });
+
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (
     <TextInput

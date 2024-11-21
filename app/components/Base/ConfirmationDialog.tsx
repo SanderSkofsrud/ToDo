@@ -44,66 +44,74 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                                                                }) => {
   const { theme } = useTheme();
 
-  const styles = StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    dialogContainer: {
-      width: '80%',
-      backgroundColor: theme.background,
-      borderRadius: BorderRadius.medium,
-      padding: Spacing.medium,
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 5,
-    },
-    title: {
-      fontSize: FontSizes.large,
-      fontWeight: 'bold',
-      color: theme.text,
-      marginBottom: Spacing.small,
-    },
-    message: {
-      fontSize: FontSizes.medium,
-      color: theme.text,
-      textAlign: 'center',
-      marginBottom: Spacing.large,
-    },
-    buttonContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
-    },
-    button: {
-      flex: 1,
-      paddingVertical: Spacing.small,
-      marginHorizontal: Spacing.small,
-      borderRadius: BorderRadius.small,
-      alignItems: 'center',
-    },
-    cancelButton: {
-      backgroundColor: theme.gray[700],
-    },
-    confirmButton: {
-      backgroundColor: theme.primary,
-    },
-    cancelButtonText: {
-      color: theme.text,
-      fontSize: FontSizes.medium,
-      fontWeight: '600',
-    },
-    confirmButtonText: {
-      color: theme.text,
-      fontSize: FontSizes.medium,
-      fontWeight: '600',
-    },
-  });
+  /**
+   * Generates styles based on the current theme.
+   * @param theme - The current theme object.
+   * @returns A StyleSheet object.
+   */
+  const getStyles = (theme: any) =>
+    StyleSheet.create({
+      overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      dialogContainer: {
+        width: '80%',
+        backgroundColor: theme.background,
+        borderRadius: BorderRadius.medium,
+        padding: Spacing.medium,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+      title: {
+        fontSize: FontSizes.large,
+        fontWeight: 'bold',
+        color: theme.text,
+        marginBottom: Spacing.small,
+      },
+      message: {
+        fontSize: FontSizes.medium,
+        color: theme.text,
+        textAlign: 'center',
+        marginBottom: Spacing.large,
+      },
+      buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+      },
+      button: {
+        flex: 1,
+        paddingVertical: Spacing.small,
+        marginHorizontal: Spacing.small,
+        borderRadius: BorderRadius.small,
+        alignItems: 'center',
+      },
+      cancelButton: {
+        backgroundColor: theme.gray[700],
+      },
+      confirmButton: {
+        backgroundColor: theme.primary,
+      },
+      cancelButtonText: {
+        color: theme.text,
+        fontSize: FontSizes.medium,
+        fontWeight: '600',
+      },
+      confirmButtonText: {
+        color: theme.text,
+        fontSize: FontSizes.medium,
+        fontWeight: '600',
+      },
+    });
+
+  const styles = getStyles(theme);
 
   return (
     <Modal
@@ -125,6 +133,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Cancel"
+              accessibilityHint="Cancels the action"
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -134,6 +143,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Confirm"
+              accessibilityHint="Confirms the action"
             >
               <Text style={styles.confirmButtonText}>Confirm</Text>
             </TouchableOpacity>

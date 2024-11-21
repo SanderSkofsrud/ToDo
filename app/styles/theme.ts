@@ -1,7 +1,21 @@
 /**
- * Defines color palettes for light and dark themes.
+ * Interface defining the structure of a Theme.
  */
-export const lightTheme = {
+export interface Theme {
+  mode: 'light' | 'dark';
+  primary: string;
+  background: string;
+  text: string;
+  gray: {
+    [key: number]: string;
+  };
+}
+
+/**
+ * Light theme color palette.
+ */
+export const lightTheme: Theme = {
+  mode: 'light',
   primary: '#2563EB',
   background: '#FFFFFF',
   text: '#000000',
@@ -19,7 +33,11 @@ export const lightTheme = {
   },
 };
 
-export const darkTheme = {
+/**
+ * Dark theme color palette.
+ */
+export const darkTheme: Theme = {
+  mode: 'dark',
   primary: '#2563EB',
   background: '#121212',
   text: '#FFFFFF',

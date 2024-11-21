@@ -1,12 +1,12 @@
-import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useContext, useMemo } from 'react';
 import { Appearance, ColorSchemeName } from 'react-native';
-import { lightTheme, darkTheme } from '../styles/theme';
+import { lightTheme, darkTheme, Theme } from '../styles/theme';
 
 /**
  * Interface for the Theme Context.
  */
 interface ThemeContextProps {
-  theme: typeof lightTheme;
+  theme: Theme;
   colorScheme: ColorSchemeName;
   toggleTheme: () => void;
 }
@@ -41,7 +41,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setColorScheme((prevScheme) => (prevScheme === 'dark' ? 'light' : 'dark'));
   };
 
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const theme = useMemo(() => (colorScheme === 'dark' ? darkTheme : lightTheme), [colorScheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, colorScheme, toggleTheme }}>

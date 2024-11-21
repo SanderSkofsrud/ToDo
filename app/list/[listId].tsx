@@ -4,6 +4,7 @@ import React, {
   useRef,
   useContext,
   useCallback,
+  useMemo,
 } from 'react';
 import { View, Alert, StyleSheet, Keyboard } from 'react-native';
 import Input, { InputRef } from '../components/Base/Input';
@@ -15,9 +16,10 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ListContext, Item } from '../context/ListContext';
 import { useTheme } from '../context/ThemeContext';
-import { Pressable, Text } from 'react-native';
+import { Pressable } from 'react-native';
 import ListHeader from '../components/List/ListHeader';
 import debounce from 'lodash.debounce';
+import { FontSizes, Spacing, BorderRadius } from '../styles/theme';
 
 /**
  * Screen component for displaying and managing a specific list.
@@ -33,8 +35,6 @@ const ListScreen = () => {
     lists,
     updateListName,
     addItem,
-    loadLists,
-    loadListItems,
     listData,
     toggleItem,
     reorderItems,
@@ -81,15 +81,16 @@ const ListScreen = () => {
   /**
    * Debounced handler to update the list name.
    */
-  const debouncedUpdateListName = useCallback(
-    debounce(async (newName: string) => {
-      try {
-        await updateListName(listId, newName);
-      } catch (e) {
-        console.error('Error updating list name:', e);
-        Alert.alert('Error', 'Failed to update the list name.');
-      }
-    }, 300),
+  const debouncedUpdateListName = useMemo(
+    () =>
+      debounce(async (newName: string) => {
+        try {
+          await updateListName(listId, newName);
+        } catch (e) {
+          console.error('Error updating list name:', e);
+          Alert.alert('Error', 'Failed to update the list name.');
+        }
+      }, 300),
     [listId, updateListName]
   );
 
@@ -190,25 +191,87 @@ const ListScreen = () => {
   const completedItems = currentItems.filter((item) => item.completed);
   const combinedItems = [...uncompletedItems, ...completedItems];
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingTop: 24,
-      paddingHorizontal: 16,
-      backgroundColor: theme.background,
-    },
-    headerStyle: {
-      backgroundColor: theme.background,
-    },
-    headerLeftIcon: {
-      marginLeft: 16,
-      padding: 12,
-    },
-    flatListContent: {
-      paddingBottom: 100,
-      paddingTop: 20,
-    },
-  });
+  /**
+   * Generates styles based on the current theme.
+   * @param theme - The current theme object.
+   * @returns A StyleSheet object.
+   */
+  const getStyles = (theme: any) =>
+    StyleSheet.create({
+      container: {
+        flex: 1,
+        paddingTop: Spacing.large,
+        paddingHorizontal: Spacing.medium,
+        backgroundColor: theme.background,
+      },
+      headerStyle: {
+        backgroundColor: theme.background,
+      },
+      headerLeftIcon: {
+      },
+      flatListContent: {
+        paddingBottom: 100,
+        paddingTop: 20,
+      },
+      card: {
+        padding: Spacing.medium,
+        borderRadius: BorderRadius.xlarge,
+        width: '48%',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: theme.gray[700],
+        borderWidth: 3,
+        marginBottom: Spacing.medium,
+      },
+      cardTitle: {
+        color: theme.text,
+        fontSize: FontSizes.xlarge,
+        fontWeight: 'bold',
+        marginBottom: Spacing.small,
+      },
+      cardItemText: {
+        color: theme.gray[300],
+        fontSize: FontSizes.medium,
+      },
+      cardMoreText: {
+        color: theme.gray[500],
+        fontSize: FontSizes.small,
+        marginTop: Spacing.small,
+      },
+      floatingButton: {
+        position: 'absolute',
+        bottom: Spacing.large,
+        right: Spacing.large,
+        backgroundColor: theme.primary,
+        width: 64,
+        height: 64,
+        borderRadius: BorderRadius.large,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+      toggleThemeButton: {
+        position: 'absolute',
+        top: Spacing.large,
+        right: Spacing.large,
+        backgroundColor: theme.primary,
+        width: 48,
+        height: 48,
+        borderRadius: BorderRadius.large,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+    });
+
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
@@ -237,6 +300,7 @@ const ListScreen = () => {
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Go back"
+              accessibilityHint="Navigates to the previous screen"
             >
               <Ionicons name="arrow-back" size={24} color={theme.text} />
             </Pressable>
@@ -251,6 +315,7 @@ const ListScreen = () => {
         blurOnSubmit={false}
         accessible={true}
         accessibilityLabel="Add new item input"
+        accessibilityHint="Enter text to add a new item to the list"
       />
       <DraggableFlatList
         data={combinedItems}

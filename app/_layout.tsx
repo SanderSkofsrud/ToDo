@@ -1,9 +1,9 @@
-import React, { useEffect, useState, createContext, useContext } from 'react';
-import { Appearance, ColorSchemeName, StyleSheet } from 'react-native';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ListProvider } from '@/app/context/ListContext';
-import { ThemeProvider, useTheme } from '@/app/context/ThemeContext';
+import { ThemeProvider } from '@/app/context/ThemeContext';
+import { StyleSheet } from 'react-native';
 
 /**
  * Root layout component that wraps the application with necessary providers.
