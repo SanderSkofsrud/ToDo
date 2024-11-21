@@ -1,9 +1,14 @@
-// context/ListContext.tsx
+// app/context/ListContext.tsx
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from 'react';
+import { saveData, loadData, deleteData } from '../../utils/storage';
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// 1. Export the interfaces
+// Interfaces
 export interface Item {
   id: string;
   text: string;
@@ -15,21 +20,26 @@ export interface List {
   name: string;
 }
 
-// 2. Update the context props to include loadLists and loadListItems
+// Context Props
 interface ListContextProps {
   lists: List[];
   listData: Record<string, Item[]>;
-  addList: (name?: string) => Promise<string>; // Returns new list ID
+  addList: (name: string) => Promise<string>;
   removeList: (id: string) => Promise<void>;
   updateListName: (id: string, newName: string) => Promise<void>;
   addItem: (listId: string, text: string) => Promise<void>;
+  toggleItem: (listId: string, itemId: string) => Promise<void>;
+  reorderItems: (listId: string, reorderedItems: Item[]) => Promise<void>;
   loadLists: () => Promise<void>;
   loadListItems: () => Promise<void>;
-  // Add more functions as needed
 }
 
-export const ListContext = createContext<ListContextProps | undefined>(undefined);
+// Create Context
+export const ListContext = createContext<ListContextProps | undefined>(
+  undefined
+);
 
+// Provider Component
 export const ListProvider = ({ children }: { children: ReactNode }) => {
   const [lists, setLists] = useState<List[]>([]);
   const [listData, setListData] = useState<Record<string, Item[]>>({});
@@ -44,86 +54,130 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [lists]);
 
+  // Generate Unique ID
   const generateUniqueId = () => {
-    return Date.now().toString() + Math.random().toString(36).substring(2, 15);
+    return (
+      Date.now().toString() + Math.random().toString(36).substring(2, 15)
+    );
   };
 
-  const loadLists = async () => {
+  // Load Lists from Storage
+  const loadLists = useCallback(async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem('lists');
-      const storedLists: List[] = jsonValue
-        ? JSON.parse(jsonValue)
-        : [{ id: generateUniqueId(), name: 'Dagligvarer' }];
-      setLists(storedLists);
+      const storedLists = await loadData<List[]>('lists');
+      const initialLists =
+        storedLists || [{ id: generateUniqueId(), name: '' }]; // Initialize with empty name
+      setLists(initialLists);
     } catch (e) {
       console.error('Error loading lists:', e);
     }
-  };
+  }, []);
 
-  const loadListItems = async () => {
+  // Load Items for All Lists
+  const loadListItems = useCallback(async () => {
     const data: Record<string, Item[]> = {};
     for (const list of lists) {
       try {
-        const jsonValue = await AsyncStorage.getItem(list.id);
-        data[list.id] = jsonValue ? JSON.parse(jsonValue) : [];
+        const items = await loadData<Item[]>(list.id);
+        data[list.id] = items || [];
       } catch (e) {
-        console.error(`Error loading items for list ${list.name}:`, e);
+        console.error(`Error loading items for list "${list.name}":`, e);
       }
     }
     setListData(data);
-  };
+  }, [lists]);
 
-  const saveLists = async (newLists: List[]) => {
+  // Save Lists to Storage
+  const saveLists = useCallback(async (newLists: List[]) => {
     try {
-      await AsyncStorage.setItem('lists', JSON.stringify(newLists));
+      await saveData('lists', newLists);
       setLists(newLists);
     } catch (e) {
       console.error('Error saving lists:', e);
     }
-  };
+  }, []);
 
-  // 3. Modify addList to return the new list ID
-  const addList = async (name?: string): Promise<string> => {
-    const newListId = generateUniqueId();
-    const newList: List = { id: newListId, name: name || '' }; // Empty name if not provided
-    const newLists = [...lists, newList];
-    await saveLists(newLists);
-    return newListId;
-  };
+  // Add a New List
+  const addList = useCallback(
+    async (name: string): Promise<string> => {
+      const newListId = generateUniqueId();
+      const newList: List = { id: newListId, name };
+      const newLists = [...lists, newList];
+      await saveLists(newLists);
+      return newListId;
+    },
+    [lists, saveLists]
+  );
 
-  const removeList = async (listId: string) => {
-    const newLists = lists.filter((l) => l.id !== listId);
-    await saveLists(newLists);
-    await AsyncStorage.removeItem(listId);
-    setListData((prevData) => {
-      const newData = { ...prevData };
-      delete newData[listId];
-      return newData;
-    });
-  };
+  // Remove a List
+  const removeList = useCallback(
+    async (listId: string) => {
+      const newLists = lists.filter((l) => l.id !== listId);
+      await saveLists(newLists);
+      await deleteData(listId);
+      setListData((prevData) => {
+        const newData = { ...prevData };
+        delete newData[listId];
+        return newData;
+      });
+    },
+    [lists, saveLists]
+  );
 
-  const updateListName = async (listId: string, newName: string) => {
-    const updatedLists = lists.map((list) =>
-      list.id === listId ? { ...list, name: newName } : list
-    );
-    await saveLists(updatedLists);
-  };
+  // Update List Name
+  const updateListName = useCallback(
+    async (listId: string, newName: string) => {
+      const updatedLists = lists.map((list) =>
+        list.id === listId ? { ...list, name: newName } : list
+      );
+      await saveLists(updatedLists);
+    },
+    [lists, saveLists]
+  );
 
-  const addItem = async (listId: string, text: string) => {
-    const newItem: Item = { id: generateUniqueId(), text, completed: false };
-    const updatedItems = [newItem, ...(listData[listId] || [])];
-    try {
-      await AsyncStorage.setItem(listId, JSON.stringify(updatedItems));
+  // Add an Item to a List
+  const addItem = useCallback(
+    async (listId: string, text: string) => {
+      const newItem: Item = { id: generateUniqueId(), text, completed: false };
+      const updatedItems = [newItem, ...(listData[listId] || [])];
+      await saveData(listId, updatedItems);
       setListData((prevData) => ({
         ...prevData,
         [listId]: updatedItems,
       }));
-    } catch (e) {
-      console.error('Error adding item:', e);
-    }
-  };
+    },
+    [listData]
+  );
 
-  // Add more functions as needed (e.g., toggleItem, reorderItems)
+  // Toggle Item Completion
+  const toggleItem = useCallback(
+    async (listId: string, itemId: string) => {
+      const currentItems = listData[listId] || [];
+      const updatedItems = currentItems.map((item) =>
+        item.id === itemId
+          ? { ...item, completed: !item.completed }
+          : item
+      );
+      await saveData(listId, updatedItems);
+      setListData((prevData) => ({
+        ...prevData,
+        [listId]: updatedItems,
+      }));
+    },
+    [listData]
+  );
+
+  // Reorder Items in a List
+  const reorderItems = useCallback(
+    async (listId: string, reorderedItems: Item[]) => {
+      await saveData(listId, reorderedItems);
+      setListData((prevData) => ({
+        ...prevData,
+        [listId]: reorderedItems,
+      }));
+    },
+    []
+  );
 
   return (
     <ListContext.Provider
@@ -134,9 +188,10 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
         removeList,
         updateListName,
         addItem,
+        toggleItem,
+        reorderItems,
         loadLists,
         loadListItems,
-        // Add more functions here
       }}
     >
       {children}
