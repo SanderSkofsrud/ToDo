@@ -1,8 +1,27 @@
-// app/styles/theme.ts
-
-export const Colors = {
+/**
+ * Defines color palettes for light and dark themes.
+ */
+export const lightTheme = {
   primary: '#2563EB',
-  background: '#000000',
+  background: '#FFFFFF',
+  text: '#000000',
+  gray: {
+    900: '#E0E0E0',
+    800: '#CCCCCC',
+    700: '#B3B3B3',
+    600: '#999999',
+    500: '#808080',
+    400: '#666666',
+    300: '#4D4D4D',
+    200: '#333333',
+    100: '#1A1A1A',
+    50: '#0D0D0D',
+  },
+};
+
+export const darkTheme = {
+  primary: '#2563EB',
+  background: '#121212',
   text: '#FFFFFF',
   gray: {
     900: '#121212',

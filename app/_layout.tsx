@@ -1,17 +1,22 @@
-// app/_layout.tsx
-
-import React from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
+import { Appearance, ColorSchemeName, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ListProvider } from '@/app/context/ListContext';
-import { StyleSheet } from 'react-native';
+import { ThemeProvider, useTheme } from '@/app/context/ThemeContext';
 
+/**
+ * Root layout component that wraps the application with necessary providers.
+ * Includes gesture handling, list management, and theming.
+ */
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
-      <ListProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-      </ListProvider>
+      <ThemeProvider>
+        <ListProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </ListProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

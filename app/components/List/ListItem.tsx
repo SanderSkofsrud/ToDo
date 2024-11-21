@@ -1,5 +1,4 @@
-// app/components/List/ListItem.tsx
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -9,15 +8,33 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, BorderRadius, Spacing, FontSizes } from '../../styles/theme';
+import { FontSizes, Spacing, BorderRadius } from '../../styles/theme';
+import { useTheme } from '../../context/ThemeContext';
 
+/**
+ * Props for the ListItem component.
+ */
 interface ListItemProps extends Omit<TouchableOpacityProps, 'onPress'> {
+  /** The text content of the list item */
   text: string;
+  /** Indicates if the item is completed */
   completed?: boolean;
+  /** Indicates if the item is being dragged */
   dragging?: boolean;
+  /** Callback function invoked when the item is pressed */
   onPress?: () => void;
 }
 
+/**
+ * A list item component that can be toggled and dragged.
+ * @param text - The text of the list item.
+ * @param completed - Whether the item is completed.
+ * @param dragging - Whether the item is being dragged.
+ * @param onPress - Function to handle press events.
+ * @param style - Optional custom styles for the item.
+ * @param props - Additional TouchableOpacity props.
+ * @returns A React functional component.
+ */
 const ListItem: React.FC<ListItemProps> = ({
                                              text,
                                              completed = false,
@@ -26,92 +43,59 @@ const ListItem: React.FC<ListItemProps> = ({
                                              style,
                                              ...props
                                            }) => {
-  const handlePress = () => {
+  const { theme } = useTheme();
+
+  const handlePress = useCallback(() => {
     Vibration.vibrate(50);
     if (onPress) {
       onPress();
     }
-  };
+  }, [onPress]);
+
+  const styles = StyleSheet.create({
+    container: {
+      marginBottom: Spacing.small,
+      flexDirection: 'row',
+      alignItems: 'center',
+      opacity: dragging ? 0.7 : 1,
+    },
+    icon: {
+      marginRight: Spacing.small,
+    },
+    content: {
+      flex: 1,
+      padding: Spacing.medium,
+      borderRadius: BorderRadius.large,
+      backgroundColor: completed ? theme.gray[700] : theme.gray[800],
+    },
+    text: {
+      fontSize: FontSizes.medium,
+      color: completed ? theme.gray[500] : theme.text,
+      textDecorationLine: completed ? 'line-through' : 'none',
+    },
+  });
 
   return (
     <TouchableOpacity
       {...props}
       onPress={handlePress}
-      style={[
-        styles.container,
-        dragging ? styles.dragging : styles.notDragging,
-        style,
-      ]}
+      style={[styles.container, style]}
       accessibilityRole="button"
       accessibilityLabel={`${text} ${completed ? 'completed' : 'not completed'}`}
       accessibilityHint="Toggles the completion state of this item"
     >
-      {/* Checkbox Icon */}
       <Ionicons
         name={completed ? 'checkbox' : 'square-outline'}
         size={24}
-        color={completed ? Colors.primary : Colors.text}
+        color={completed ? theme.primary : theme.text}
         style={styles.icon}
         accessibilityIgnoresInvertColors
       />
-
-      {/* Item Content */}
-      <View
-        style={[
-          styles.content,
-          completed ? styles.completedBackground : styles.incompleteBackground,
-        ]}
-      >
-        <Text
-          style={[
-            styles.text,
-            completed ? styles.completedText : styles.incompleteText,
-          ]}
-        >
-          {text}
-        </Text>
+      <View style={styles.content}>
+        <Text style={styles.text}>{text}</Text>
       </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: Spacing.small, // mb-2
-    flexDirection: 'row', // flex-row
-    alignItems: 'center', // items-center
-    opacity: 1,
-  },
-  dragging: {
-    opacity: 0.7, // opacity-70
-  },
-  notDragging: {
-    opacity: 1, // opacity-100
-  },
-  icon: {
-    marginRight: Spacing.small, // mr-3
-  },
-  content: {
-    flex: 1, // flex-1
-    padding: Spacing.medium, // p-4
-    borderRadius: BorderRadius.large, // rounded-lg
-  },
-  completedBackground: {
-    backgroundColor: Colors.gray[700],
-  },
-  incompleteBackground: {
-    backgroundColor: Colors.gray[800],
-  },
-  text: {
-    fontSize: FontSizes.medium, // text-base
-  },
-  completedText: {
-    textDecorationLine: 'line-through',
-    color: Colors.gray[500],
-  },
-  incompleteText: {
-    color: Colors.text,
-  },
-});
 
 export default memo(ListItem);

@@ -1,21 +1,35 @@
-// app/components/Base/Input.tsx
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { TextInput, TextInputProps, StyleSheet } from 'react-native';
-import { Colors, BorderRadius, Spacing, FontSizes } from '../../styles/theme';
+import { useTheme } from '../../context/ThemeContext';
 
+/**
+ * Interface for input reference methods.
+ */
 export interface InputRef {
+  /** Clears the input field */
   clear: () => void;
+  /** Focuses the input field */
   focus: () => void;
 }
 
+/**
+ * Props for the CustomTextInput component.
+ */
 interface CustomTextInputProps extends TextInputProps {
+  /** Optional custom styles for the input */
   style?: object;
 }
 
+/**
+ * A customizable TextInput component with exposed clear and focus methods.
+ * @param props - TextInput properties.
+ * @param ref - Reference to access clear and focus methods.
+ * @returns A React functional component.
+ */
 const Input = forwardRef<InputRef, CustomTextInputProps>((props, ref) => {
   const inputRef = useRef<TextInput>(null);
+  const { theme } = useTheme();
 
-  // Expose the clear and focus methods to the parent component
   useImperativeHandle(ref, () => ({
     clear: () => {
       inputRef.current?.clear();
@@ -25,11 +39,24 @@ const Input = forwardRef<InputRef, CustomTextInputProps>((props, ref) => {
     },
   }));
 
+  const styles = StyleSheet.create({
+    input: {
+      backgroundColor: 'rgba(31, 31, 31, 0.5)',
+      borderWidth: 1,
+      borderColor: theme.gray[700],
+      borderRadius: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      color: theme.text,
+    },
+  });
+
   return (
     <TextInput
       ref={inputRef}
       style={[styles.input, props.style]}
-      placeholderTextColor={Colors.gray[100]}
+      placeholderTextColor={theme.gray[100]}
       {...props}
       accessible={true}
       accessibilityLabel={props.placeholder || 'Input Field'}
@@ -37,17 +64,4 @@ const Input = forwardRef<InputRef, CustomTextInputProps>((props, ref) => {
   );
 });
 
-const styles = StyleSheet.create({
-  input: {
-    backgroundColor: 'rgba(31, 31, 31, 0.5)', // Equivalent to bg-gray-800 bg-opacity-50
-    borderWidth: 1, // Equivalent to border
-    borderColor: Colors.gray[700], // Equivalent to border-gray-700
-    borderRadius: BorderRadius.medium, // Equivalent to rounded-md
-    paddingVertical: Spacing.small, // Equivalent to py-2
-    paddingHorizontal: Spacing.medium, // Equivalent to px-3
-    fontSize: FontSizes.medium, // Equivalent to text-base
-    color: Colors.text, // Equivalent to text-white
-  },
-});
-
-export default Input;
+export default React.memo(Input);

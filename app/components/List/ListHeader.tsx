@@ -1,18 +1,36 @@
-// app/components/List/ListHeader.tsx
 import React, { forwardRef, useRef, useEffect } from 'react';
 import { TextInput, TextInputProps, StyleSheet } from 'react-native';
-import { Colors, FontSizes, Spacing } from '../../styles/theme';
+import { FontSizes, Spacing } from '../../styles/theme';
+import { useTheme } from '../../context/ThemeContext';
 
+/**
+ * Props for the ListHeader component.
+ */
 interface ListHeaderProps extends TextInputProps {
+  /** The current name of the list */
   listName: string;
+  /** Callback function invoked when the list name changes */
   onChangeName: (newName: string) => void;
+  /** Callback function invoked when submitting the list name */
   onSubmit: () => void;
-  focusRef?: (focus: () => void) => void; // Corrected type
+  /** Function to set focus on the input field */
+  focusRef?: (focus: () => void) => void;
 }
 
+/**
+ * A header component for the list screen that allows editing the list name.
+ * @param listName - Current name of the list.
+ * @param onChangeName - Function to handle name changes.
+ * @param onSubmit - Function to handle submission of the name.
+ * @param focusRef - Function to set focus on the input.
+ * @param props - Additional TextInput props.
+ * @param ref - Reference to the TextInput.
+ * @returns A React functional component.
+ */
 const ListHeader = forwardRef<TextInput, ListHeaderProps>(
   ({ listName, onChangeName, onSubmit, focusRef, ...props }, ref) => {
     const inputRef = useRef<TextInput>(null);
+    const { theme } = useTheme();
 
     useEffect(() => {
       if (focusRef) {
@@ -22,6 +40,17 @@ const ListHeader = forwardRef<TextInput, ListHeaderProps>(
       }
     }, [focusRef]);
 
+    const styles = StyleSheet.create({
+      headerTitle: {
+        color: theme.text,
+        fontSize: FontSizes.large,
+        fontWeight: 'bold',
+        flex: 1,
+        paddingVertical: Spacing.tiny,
+        paddingRight: 40, // Prevent overlapping with other header elements
+      },
+    });
+
     return (
       <TextInput
         ref={inputRef}
@@ -29,12 +58,12 @@ const ListHeader = forwardRef<TextInput, ListHeaderProps>(
         onChangeText={onChangeName}
         onSubmitEditing={onSubmit}
         onBlur={onSubmit}
-        placeholder="Liste Navn"
-        placeholderTextColor={Colors.gray[100]}
+        placeholder="List Name"
+        placeholderTextColor={theme.gray[100]}
         style={styles.headerTitle}
         accessible={true}
-        accessibilityLabel="Liste Navn Input"
-        accessibilityHint="Skriv inn navnet på listen"
+        accessibilityLabel="List Name Input"
+        accessibilityHint="Enter the name of the list"
         {...props}
       />
     );
@@ -43,14 +72,3 @@ const ListHeader = forwardRef<TextInput, ListHeaderProps>(
 
 // Memoize the component to prevent unnecessary re-renders
 export default React.memo(ListHeader);
-
-const styles = StyleSheet.create({
-  headerTitle: {
-    color: Colors.text,
-    fontSize: FontSizes.large,
-    fontWeight: 'bold',
-    flex: 1,
-    paddingVertical: Spacing.tiny,
-    paddingRight: 40, // To prevent overlapping with other header elements
-  },
-});

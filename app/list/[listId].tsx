@@ -1,4 +1,3 @@
-// app/list/[listId].tsx
 import React, {
   useState,
   useEffect,
@@ -15,16 +14,20 @@ import DraggableFlatList, {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ListContext, Item } from '../context/ListContext';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../styles/theme';
+import { useTheme } from '../context/ThemeContext';
 import { Pressable, Text } from 'react-native';
 import ListHeader from '../components/List/ListHeader';
-import debounce from 'lodash.debounce'; // Import debounce
+import debounce from 'lodash.debounce';
 
+/**
+ * Screen component for displaying and managing a specific list.
+ * @returns A React functional component.
+ */
 const ListScreen = () => {
   const { listId } = useLocalSearchParams<{ listId: string }>();
   const [listName, setListName] = useState('');
-  const addItemInputRef = useRef<InputRef>(null); // Ref for "Add New Element" input
-  const focusListNameInput = useRef<(() => void) | null>(null); // Callback ref for ListHeader's input
+  const addItemInputRef = useRef<InputRef>(null);
+  const focusListNameInput = useRef<(() => void) | null>(null);
   const router = useRouter();
   const {
     lists,
@@ -36,9 +39,10 @@ const ListScreen = () => {
     toggleItem,
     reorderItems,
   } = useContext(ListContext)!;
+  const { theme } = useTheme();
 
   /**
-   * Load the current list details based on listId.
+   * Loads the current list details based on listId.
    */
   const loadList = useCallback(async () => {
     try {
@@ -46,12 +50,12 @@ const ListScreen = () => {
       if (list) {
         setListName(list.name);
         if (list.name === '') {
-          // If name is empty, focus the list name input field
+          // Focus the list name input field if name is empty
           setTimeout(() => {
             if (focusListNameInput.current) {
               focusListNameInput.current();
             }
-          }, 100); // Slight delay to ensure the component is mounted
+          }, 100);
         }
       } else {
         console.error(`List with id "${listId}" not found.`);
@@ -64,9 +68,6 @@ const ListScreen = () => {
     }
   }, [listId, lists, router]);
 
-  /**
-   * useEffect hook to load the list when the component mounts or listId changes.
-   */
   useEffect(() => {
     if (listId) {
       loadList();
@@ -84,17 +85,17 @@ const ListScreen = () => {
     debounce(async (newName: string) => {
       try {
         await updateListName(listId, newName);
-        // Removed loadLists and loadListItems to prevent excessive re-renders
       } catch (e) {
         console.error('Error updating list name:', e);
         Alert.alert('Error', 'Failed to update the list name.');
       }
-    }, 300), // 300ms debounce
+    }, 300),
     [listId, updateListName]
   );
 
   /**
    * Handler to update the list name with debouncing.
+   * @param newName - The new name of the list.
    */
   const handleListNameChange = useCallback(
     (newName: string) => {
@@ -108,12 +109,12 @@ const ListScreen = () => {
    * Handler to finalize the list name update.
    */
   const handleFinalizeListName = useCallback(() => {
-    // Flush any pending debounced updates
     debouncedUpdateListName.flush();
   }, [debouncedUpdateListName]);
 
   /**
    * Handler to add a new item to the list.
+   * @param event - The native event containing the text.
    */
   const handleAddItem = useCallback(
     async (event: { nativeEvent: { text: string } }) => {
@@ -121,7 +122,6 @@ const ListScreen = () => {
       if (text.trim().length === 0) return;
       try {
         await addItem(listId, text);
-        // Clear the input field and refocus
         if (addItemInputRef.current) {
           addItemInputRef.current.clear();
           addItemInputRef.current.focus();
@@ -136,6 +136,7 @@ const ListScreen = () => {
 
   /**
    * Handler to toggle the completion status of an item.
+   * @param itemId - The ID of the item to toggle.
    */
   const handleToggleItem = useCallback(
     async (itemId: string) => {
@@ -151,6 +152,7 @@ const ListScreen = () => {
 
   /**
    * Handler to reorder items in the list.
+   * @param data - The reordered items array.
    */
   const handleDragEnd = useCallback(
     async ({ data }: { data: Item[] }) => {
@@ -166,6 +168,8 @@ const ListScreen = () => {
 
   /**
    * Renders each item in the DraggableFlatList.
+   * @param param0 - Render item parameters.
+   * @returns A ListItem component.
    */
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<Item>) => (
@@ -186,6 +190,26 @@ const ListScreen = () => {
   const completedItems = currentItems.filter((item) => item.completed);
   const combinedItems = [...uncompletedItems, ...completedItems];
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingTop: 24,
+      paddingHorizontal: 16,
+      backgroundColor: theme.background,
+    },
+    headerStyle: {
+      backgroundColor: theme.background,
+    },
+    headerLeftIcon: {
+      marginLeft: 16,
+      padding: 12,
+    },
+    flatListContent: {
+      paddingBottom: 100,
+      paddingTop: 20,
+    },
+  });
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -201,12 +225,12 @@ const ListScreen = () => {
               }}
             />
           ),
-          headerTintColor: Colors.text,
+          headerTintColor: theme.text,
           headerStyle: styles.headerStyle,
           headerLeft: () => (
             <Pressable
               onPress={() => {
-                Keyboard.dismiss(); // Dismiss keyboard if open
+                Keyboard.dismiss();
                 router.back();
               }}
               style={styles.headerLeftIcon}
@@ -214,17 +238,19 @@ const ListScreen = () => {
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <Ionicons name="arrow-back" size={24} color={Colors.text} />
+              <Ionicons name="arrow-back" size={24} color={theme.text} />
             </Pressable>
           ),
         }}
       />
       <Input
-        ref={addItemInputRef} // Ref for "Add New Element" input
-        placeholder="Legg til nytt element"
+        ref={addItemInputRef}
+        placeholder="Add new item"
         onSubmitEditing={handleAddItem}
         returnKeyType="done"
-        blurOnSubmit={false} // Keeps keyboard open
+        blurOnSubmit={false}
+        accessible={true}
+        accessibilityLabel="Add new item input"
       />
       <DraggableFlatList
         data={combinedItems}
@@ -238,25 +264,5 @@ const ListScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: Spacing.large,
-    paddingHorizontal: Spacing.medium,
-    backgroundColor: Colors.background,
-  },
-  headerStyle: {
-    backgroundColor: Colors.background,
-  },
-  headerLeftIcon: {
-    marginLeft: Spacing.medium,
-    padding: 12,
-  },
-  flatListContent: {
-    paddingBottom: 100,
-    paddingTop: 20,
-  },
-});
 
 export default ListScreen;

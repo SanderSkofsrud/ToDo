@@ -1,36 +1,52 @@
-// app/components/Base/Button.tsx
 import React from 'react';
 import {
   TouchableOpacity,
   Text,
   TouchableOpacityProps,
-  StyleSheet,
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { commonStyles } from '../../styles/commonStyles';
+import { useCommonStyles } from '../../styles/commonStyles';
 
+/**
+ * Props for the Button component.
+ */
 interface ButtonProps extends TouchableOpacityProps {
+  /** The text to display on the button */
   title: string;
+  /** Optional style to override the button's container */
   style?: ViewStyle;
+  /** Optional style to override the button's text */
   textStyle?: TextStyle;
 }
 
+/**
+ * A customizable button component with accessibility support.
+ * @param title - The text displayed on the button.
+ * @param style - Optional custom styles for the button container.
+ * @param textStyle - Optional custom styles for the button text.
+ * @param props - Additional TouchableOpacity props.
+ * @returns A React functional component.
+ */
 const Button: React.FC<ButtonProps> = ({
                                          title,
                                          style,
                                          textStyle,
                                          ...props
-                                       }) => (
-  <TouchableOpacity
-    style={[commonStyles.button, style]} // Allow overriding styles via props
-    {...props}
-    accessible={true}
-    accessibilityRole="button"
-    accessibilityLabel={title}
-  >
-    <Text style={[commonStyles.buttonText, textStyle]}>{title}</Text>
-  </TouchableOpacity>
-);
+                                       }) => {
+  const commonStyles = useCommonStyles();
 
-export default Button;
+  return (
+    <TouchableOpacity
+      style={[commonStyles.button, style]}
+      {...props}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+    >
+      <Text style={[commonStyles.buttonText, textStyle]}>{title}</Text>
+    </TouchableOpacity>
+  );
+};
+
+export default React.memo(Button);
