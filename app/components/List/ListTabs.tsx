@@ -96,7 +96,6 @@ const ListTabs: React.FC<ListTabsProps> = ({
         paddingVertical: Spacing.small,
         paddingHorizontal: Spacing.medium,
         borderRadius: BorderRadius.medium,
-        backgroundColor: theme.activeTabBackground, // Consistent with active tab
       } as ViewStyle,
       addButtonText: {
         fontSize: FontSizes.large,

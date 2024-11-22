@@ -1,11 +1,15 @@
+// src/screens/HomeScreen.tsx
+
 import React, { useContext, useCallback, useState, useMemo } from 'react';
 import {
   View,
-  FlatList,
   Text,
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Dimensions,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -16,6 +20,11 @@ import { ListContext, List } from '../context/ListContext';
 import { FontSizes, Spacing, BorderRadius } from '../styles/theme';
 import ConfirmationDialog from '../components/Base/ConfirmationDialog';
 import { useTheme } from '../context/ThemeContext';
+import StaggeredList from '@mindinventory/react-native-stagger-view'; // Import the library
+
+const { width } = Dimensions.get('window');
+const CARD_MARGIN = Spacing.small;
+const NUM_COLUMNS = 2; // Number of columns in the grid
 
 /**
  * Home screen component displaying all lists with search and add functionality.
@@ -51,20 +60,19 @@ const HomeScreen = () => {
         paddingTop: Spacing.large,
         backgroundColor: theme.background,
       },
-      flatListContent: {
-        paddingBottom: 100,
-        paddingTop: 20,
-      },
-      columnWrapper: {
-        justifyContent: 'space-between',
-      },
       card: {
         padding: Spacing.medium,
         borderRadius: BorderRadius.xlarge,
-        width: '48%',
         borderColor: theme.gray[700],
         borderWidth: 3,
-        marginBottom: Spacing.medium,
+        backgroundColor: theme.activeTabBackground,
+        margin: CARD_MARGIN / 2, // Adjusted margin for grid spacing
+        // Optional: Add shadow or elevation for better visual
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
       },
       cardTitle: {
         color: theme.text,
@@ -120,6 +128,21 @@ const HomeScreen = () => {
         color: theme.text,
         fontSize: FontSizes.medium,
         marginLeft: Spacing.small,
+      },
+      activityIndicatorWrapper: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      img: {
+        width: '100%',
+        height: '100%',
+        borderRadius: BorderRadius.medium,
+      },
+      avatarImage: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
       },
     });
 
@@ -194,27 +217,33 @@ const HomeScreen = () => {
   }, []);
 
   /**
-   * Renders each list card in the FlatList.
-   * @param param0 - The list item.
-   * @returns A TouchableOpacity representing the list card.
+   * Renders each list card.
+   * @param list - The list to render.
+   * @returns A JSX element representing the list card.
    */
   const renderCard = useCallback(
-    ({ item }: { item: List }) => {
-      const items = listData[item.id] || [];
+    (list: List) => {
+      const items = listData[list.id] || [];
       const uncompletedItems = items.filter((i) => !i.completed);
+
+      // Calculate dynamic height based on the number of items
+      const baseHeight = 100; // Base height for the card
+      const additionalHeight = uncompletedItems.length * 20; // Additional height per item
+      const totalHeight = baseHeight + additionalHeight;
 
       return (
         <TouchableOpacity
-          onPress={() => router.push(`/list/${item.id}`)}
-          onLongPress={() => confirmDeleteList(item)}
-          style={styles.card}
+          key={list.id}
+          onPress={() => router.push(`/list/${list.id}`)}
+          onLongPress={() => confirmDeleteList(list)}
+          style={[styles.card, { height: totalHeight }]}
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel={`List: ${item.name || 'Unnamed'}`}
+          accessibilityLabel={`List: ${list.name || 'Unnamed'}`}
           accessibilityHint="Tap to open the list, long press to delete"
         >
           <Text style={styles.cardTitle}>
-            {item.name || 'Unnamed'}
+            {list.name || 'Unnamed'}
           </Text>
           {uncompletedItems.slice(0, 5).map((listItem) => (
             <Text key={listItem.id} style={styles.cardItemText}>
@@ -227,7 +256,17 @@ const HomeScreen = () => {
         </TouchableOpacity>
       );
     },
-    [confirmDeleteList, listData, router, styles]
+    [confirmDeleteList, listData, router, styles.card, styles.cardItemText, styles.cardMoreText, styles.cardTitle]
+  );
+
+  /**
+   * Renders each item in the StaggeredList.
+   * @param param0 - The item data.
+   * @returns A JSX element representing the list card.
+   */
+  const renderItem = useCallback(
+    ({ item }: { item: List }) => renderCard(item),
+    [renderCard]
   );
 
   return (
@@ -257,18 +296,36 @@ const HomeScreen = () => {
         {filteredLists.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No lists available.</Text>
+            <TouchableOpacity
+              onPress={handleAddList}
+              style={styles.emptyButton}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Add new list"
+              accessibilityHint="Creates a new list"
+            >
+              <Ionicons name="add" size={20} color={theme.text} />
+              <Text style={styles.emptyButtonText}>Add a new list</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <FlatList
+          <StaggeredList
             data={filteredLists}
-            renderItem={renderCard}
+            renderItem={renderItem}
             keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.flatListContent}
-            columnWrapperStyle={styles.columnWrapper}
-            accessible={true}
-            accessibilityLabel="List of all your lists"
-            accessibilityHint="Displays all your created lists"
+            animationType={'FADE_IN_FAST'}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            LoadingView={
+              <View style={styles.activityIndicatorWrapper}>
+                <ActivityIndicator color={'black'} size={'large'} />
+              </View>
+            }
+            ListHeaderComponent={null} // Add if needed
+            ListEmptyComponent={null} // Already handled above
+            ListFooterComponent={null} // Add if needed
+            ListHeaderComponentStyle={undefined} // Add styles if needed
+            containerStyle={{ flex: 1 }}
+            numColumns={NUM_COLUMNS}
           />
         )}
 
@@ -282,6 +339,7 @@ const HomeScreen = () => {
         >
           <Ionicons name="add" size={32} color={theme.text} />
         </TouchableOpacity>
+
         <ConfirmationDialog
           visible={isDialogVisible}
           title="Confirm Deletion"

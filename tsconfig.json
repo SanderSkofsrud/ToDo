@@ -8,6 +8,8 @@
     }
   },
   "include": [
+    "types/**/*.d.ts",
+    "types",
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
