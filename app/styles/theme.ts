@@ -1,24 +1,20 @@
-/**
- * Interface defining the structure of a Theme.
- */
 export interface Theme {
   mode: 'light' | 'dark';
   primary: string;
   background: string;
   text: string;
+  activeTabBackground: string;
   gray: {
     [key: number]: string;
   };
 }
 
-/**
- * Light theme color palette.
- */
 export const lightTheme: Theme = {
   mode: 'light',
   primary: '#2563EB',
   background: '#FFFFFF',
   text: '#000000',
+  activeTabBackground: '#E0E0E0',
   gray: {
     900: '#E0E0E0',
     800: '#CCCCCC',
@@ -33,14 +29,12 @@ export const lightTheme: Theme = {
   },
 };
 
-/**
- * Dark theme color palette.
- */
 export const darkTheme: Theme = {
   mode: 'dark',
   primary: '#2563EB',
   background: '#121212',
   text: '#FFFFFF',
+  activeTabBackground: '#333333',
   gray: {
     900: '#121212',
     800: '#1E1E1E',

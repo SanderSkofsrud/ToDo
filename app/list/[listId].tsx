@@ -5,32 +5,45 @@ import React, {
   useContext,
   useCallback,
   useMemo,
+  useLayoutEffect,
 } from 'react';
-import { View, Alert, StyleSheet, Keyboard } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Keyboard,
+  Text,
+} from 'react-native';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import Input, { InputRef } from '../components/Base/Input';
 import ListItem from '../components/List/ListItem';
 import DraggableFlatList, {
   RenderItemParams,
 } from 'react-native-draggable-flatlist';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ListContext, Item } from '../context/ListContext';
+import { ListContext, Item, List } from '../context/ListContext';
 import { useTheme } from '../context/ThemeContext';
-import { Pressable } from 'react-native';
 import ListHeader from '../components/List/ListHeader';
+import ListTabs from '../components/List/ListTabs';
+import ConfirmationDialog from '../components/Base/ConfirmationDialog';
 import debounce from 'lodash.debounce';
 import { FontSizes, Spacing, BorderRadius } from '../styles/theme';
 
 /**
- * Screen component for displaying and managing a specific list.
- * @returns A React functional component.
+ * Screen component for displaying and managing multiple lists with tabs.
+ * Implements header configuration.
  */
 const ListScreen = () => {
   const { listId } = useLocalSearchParams<{ listId: string }>();
   const [listName, setListName] = useState('');
+  const [activeListId, setActiveListId] = useState<string>(listId);
+  const [isDeleteDialogVisible, setDeleteDialogVisible] = useState<boolean>(false);
+  const [listToDelete, setListToDelete] = useState<string | null>(null);
   const addItemInputRef = useRef<InputRef>(null);
-  const focusListNameInput = useRef<(() => void) | null>(null);
+  const focusListNameInput = useRef<InputRef>(null); // Corrected ref type
   const router = useRouter();
+  const navigation = useNavigation();
   const {
     lists,
     updateListName,
@@ -38,27 +51,27 @@ const ListScreen = () => {
     listData,
     toggleItem,
     reorderItems,
+    addList,
+    removeList,
   } = useContext(ListContext)!;
   const { theme } = useTheme();
 
   /**
-   * Loads the current list details based on listId.
+   * Loads the current list details based on activeListId.
    */
   const loadList = useCallback(async () => {
     try {
-      const list = lists.find((l) => l.id === listId);
+      const list = lists.find((l) => l.id === activeListId);
       if (list) {
         setListName(list.name);
         if (list.name === '') {
           // Focus the list name input field if name is empty
           setTimeout(() => {
-            if (focusListNameInput.current) {
-              focusListNameInput.current();
-            }
+            focusListNameInput.current?.focus(); // Updated method call
           }, 100);
         }
       } else {
-        console.error(`List with id "${listId}" not found.`);
+        console.error(`List with id "${activeListId}" not found.`);
         Alert.alert('Error', 'List not found.');
         router.back();
       }
@@ -66,17 +79,17 @@ const ListScreen = () => {
       console.error('Error loading list:', e);
       Alert.alert('Error', 'Failed to load the list.');
     }
-  }, [listId, lists, router]);
+  }, [activeListId, lists, router]);
 
   useEffect(() => {
-    if (listId) {
+    if (activeListId) {
       loadList();
     } else {
-      console.error('listId is undefined');
+      console.error('activeListId is undefined');
       Alert.alert('Error', 'Invalid list ID.');
       router.back();
     }
-  }, [listId, loadList]);
+  }, [activeListId, loadList, router]);
 
   /**
    * Debounced handler to update the list name.
@@ -85,13 +98,13 @@ const ListScreen = () => {
     () =>
       debounce(async (newName: string) => {
         try {
-          await updateListName(listId, newName);
+          await updateListName(activeListId, newName);
         } catch (e) {
           console.error('Error updating list name:', e);
           Alert.alert('Error', 'Failed to update the list name.');
         }
       }, 300),
-    [listId, updateListName]
+    [activeListId, updateListName]
   );
 
   /**
@@ -114,7 +127,7 @@ const ListScreen = () => {
   }, [debouncedUpdateListName]);
 
   /**
-   * Handler to add a new item to the list.
+   * Handler to add a new item to the active list.
    * @param event - The native event containing the text.
    */
   const handleAddItem = useCallback(
@@ -122,7 +135,7 @@ const ListScreen = () => {
       const text = event.nativeEvent.text;
       if (text.trim().length === 0) return;
       try {
-        await addItem(listId, text);
+        await addItem(activeListId, text);
         if (addItemInputRef.current) {
           addItemInputRef.current.clear();
           addItemInputRef.current.focus();
@@ -132,7 +145,7 @@ const ListScreen = () => {
         Alert.alert('Error', 'Failed to add the item.');
       }
     },
-    [addItem, listId]
+    [addItem, activeListId]
   );
 
   /**
@@ -142,29 +155,29 @@ const ListScreen = () => {
   const handleToggleItem = useCallback(
     async (itemId: string) => {
       try {
-        await toggleItem(listId, itemId);
+        await toggleItem(activeListId, itemId);
       } catch (e) {
         console.error('Error toggling item:', e);
         Alert.alert('Error', 'Failed to toggle the item.');
       }
     },
-    [toggleItem, listId]
+    [toggleItem, activeListId]
   );
 
   /**
-   * Handler to reorder items in the list.
+   * Handler to reorder items in the active list.
    * @param data - The reordered items array.
    */
   const handleDragEnd = useCallback(
     async ({ data }: { data: Item[] }) => {
       try {
-        await reorderItems(listId, data);
+        await reorderItems(activeListId, data);
       } catch (e) {
         console.error('Error saving reordered items:', e);
         Alert.alert('Error', 'Failed to reorder items.');
       }
     },
-    [reorderItems, listId]
+    [reorderItems, activeListId]
   );
 
   /**
@@ -185,11 +198,77 @@ const ListScreen = () => {
     [handleToggleItem]
   );
 
-  // Separate uncompleted and completed items
-  const currentItems = listData[listId] || [];
-  const uncompletedItems = currentItems.filter((item) => !item.completed);
-  const completedItems = currentItems.filter((item) => item.completed);
-  const combinedItems = [...uncompletedItems, ...completedItems];
+  /**
+   * Handler to add a new list via the tabs.
+   */
+  const handleAddListTab = useCallback(async () => {
+    try {
+      const newListId = await addList(''); // Create a list with an empty name
+      setActiveListId(newListId);
+    } catch (e) {
+      console.error('Error adding new list:', e);
+      Alert.alert('Error', 'Failed to create a new list.');
+    }
+  }, [addList]);
+
+  /**
+   * Handler when a tab (list) is pressed.
+   * @param key - The ID of the selected list.
+   */
+  const handleTabPress = useCallback((key: string) => {
+    setActiveListId(key);
+  }, []);
+
+  /**
+   * Handler to initiate deletion of a list.
+   * @param key - The ID of the list to delete.
+   */
+  const handleDeleteTab = useCallback((key: string) => {
+    if (key === activeListId) {
+      Alert.alert('Cannot Delete', 'You cannot delete the active list.');
+      return;
+    }
+    setListToDelete(key);
+    setDeleteDialogVisible(true);
+  }, [activeListId]);
+
+  /**
+   * Handler to confirm deletion.
+   */
+  const confirmDeleteTab = useCallback(async () => {
+    if (!listToDelete) return;
+    try {
+      await removeList(listToDelete);
+      setDeleteDialogVisible(false);
+      setListToDelete(null);
+      // Optionally, set activeListId to another list
+      if (lists.length > 1) {
+        const remainingLists = lists.filter((l) => l.id !== listToDelete);
+        setActiveListId(remainingLists[0].id);
+      }
+    } catch (e) {
+      console.error('Error deleting list:', e);
+      Alert.alert('Error', 'Failed to delete the list.');
+    }
+  }, [listToDelete, removeList, lists]);
+
+  /**
+   * Handler to cancel deletion.
+   */
+  const cancelDeleteTab = useCallback(() => {
+    setDeleteDialogVisible(false);
+    setListToDelete(null);
+  }, []);
+
+  // Get all tabs from the lists context
+  const tabs = useMemo(
+    () =>
+      lists.map((list: List) => ({
+        label: list.name || 'Unnamed',
+        key: list.id,
+      })),
+    [lists]
+  );
 
   /**
    * Generates styles based on the current theme.
@@ -204,109 +283,153 @@ const ListScreen = () => {
         paddingHorizontal: Spacing.medium,
         backgroundColor: theme.background,
       },
-      headerStyle: {
-        backgroundColor: theme.background,
-      },
       headerLeftIcon: {
+        padding: 8, // Increase touchable area
+        zIndex: 10, // Ensure it's on top
+      },
+      tabsContainer: {
+        marginTop: Spacing.small,
+        // Removed any border or padding that might introduce space
+      },
+      // Removed the divider style as it's no longer needed
+      // divider: {
+      //   height: 1,
+      //   backgroundColor: theme.gray[700],
+      // },
+      listNameContainer: {
+        marginBottom: Spacing.medium,
+      },
+      listNameInput: {
+        fontSize: FontSizes.xlarge,              // Increased text size
+        color: theme.text,
+        borderWidth: 0,                          // Ensure no border
+        paddingVertical: Spacing.medium,         // Increased height
+        paddingHorizontal: Spacing.medium,
+        backgroundColor: theme.activeTabBackground, // Matches active tab background
+        borderBottomLeftRadius: BorderRadius.medium,
+        borderBottomRightRadius: BorderRadius.medium,
       },
       flatListContent: {
         paddingBottom: 100,
         paddingTop: 20,
       },
-      card: {
-        padding: Spacing.medium,
-        borderRadius: BorderRadius.xlarge,
-        width: '48%',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderColor: theme.gray[700],
-        borderWidth: 3,
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Spacing.large,
+      },
+      emptyText: {
+        fontSize: FontSizes.large,
+        color: theme.text,
         marginBottom: Spacing.medium,
       },
-      cardTitle: {
+      emptyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.primary,
+        paddingVertical: Spacing.small,
+        paddingHorizontal: Spacing.medium,
+        borderRadius: BorderRadius.medium,
+      },
+      emptyButtonText: {
         color: theme.text,
-        fontSize: FontSizes.xlarge,
-        fontWeight: 'bold',
-        marginBottom: Spacing.small,
-      },
-      cardItemText: {
-        color: theme.gray[300],
         fontSize: FontSizes.medium,
-      },
-      cardMoreText: {
-        color: theme.gray[500],
-        fontSize: FontSizes.small,
-        marginTop: Spacing.small,
-      },
-      floatingButton: {
-        position: 'absolute',
-        bottom: Spacing.large,
-        right: Spacing.large,
-        backgroundColor: theme.primary,
-        width: 64,
-        height: 64,
-        borderRadius: BorderRadius.large,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-      },
-      toggleThemeButton: {
-        position: 'absolute',
-        top: Spacing.large,
-        right: Spacing.large,
-        backgroundColor: theme.primary,
-        width: 48,
-        height: 48,
-        borderRadius: BorderRadius.large,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
+        marginLeft: Spacing.small,
       },
     });
 
   const styles = useMemo(() => getStyles(theme), [theme]);
 
+  /**
+   * Configures the header using useLayoutEffect.
+   */
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: true,
+      headerTitle: () => (
+        <ListHeader onBackPress={() => router.back()} />
+      ),
+      headerStyle: {
+        backgroundColor: theme.background,
+      },
+      headerTintColor: theme.text,
+    });
+  }, [
+    navigation,
+    router,
+    theme,
+    styles.headerLeftIcon,
+  ]);
+
+  /**
+   * Get items for the active list
+   * Sort them so that incomplete items come first, followed by completed items.
+   * Maintain original order within each group.
+   */
+  const currentItems = useMemo(() => {
+    const items = listData[activeListId] || [];
+    return items.slice().sort((a, b) => {
+      if (a.completed === b.completed) return 0;
+      return a.completed ? 1 : -1;
+    });
+  }, [listData, activeListId]);
+
+  /**
+   * Handle the case when there are no lists.
+   */
+  if (lists.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.emptyText}>No lists available.</Text>
+        <TouchableOpacity
+          onPress={handleAddListTab}
+          style={styles.emptyButton}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Add new list"
+          accessibilityHint="Creates a new list"
+        >
+          <Ionicons name="add" size={20} color={theme.text} />
+          <Text style={styles.emptyButtonText}>Add a new list</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: () => (
-            <ListHeader
-              listName={listName}
-              onChangeName={handleListNameChange}
-              onSubmit={handleFinalizeListName}
-              focusRef={(focus: () => void) => {
-                focusListNameInput.current = focus;
-              }}
-            />
-          ),
-          headerTintColor: theme.text,
-          headerStyle: styles.headerStyle,
-          headerLeft: () => (
-            <Pressable
-              onPress={() => {
-                Keyboard.dismiss();
-                router.back();
-              }}
-              style={styles.headerLeftIcon}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              accessibilityHint="Navigates to the previous screen"
-            >
-              <Ionicons name="arrow-back" size={24} color={theme.text} />
-            </Pressable>
-          ),
-        }}
-      />
+      {/* Tabs Component */}
+      <View style={styles.tabsContainer}>
+        <ListTabs
+          tabs={tabs}
+          activeTab={activeListId}
+          onTabPress={handleTabPress}
+          onAddTab={handleAddListTab}
+          onDeleteTab={handleDeleteTab}
+        />
+        {/* Removed the divider to eliminate space and border */}
+        {/* <View style={styles.divider} /> */}
+      </View>
+
+      {/* Editable List Name */}
+      <View style={styles.listNameContainer}>
+        <Input
+          value={listName}
+          onChangeText={handleListNameChange}
+          onSubmitEditing={handleFinalizeListName}
+          onBlur={handleFinalizeListName}
+          placeholder="List Name"
+          placeholderTextColor={theme.gray[400]}
+          style={styles.listNameInput}
+          accessible={true}
+          accessibilityLabel="List Name Input"
+          accessibilityHint="Enter the name of the list"
+          ref={focusListNameInput} // Correctly typed ref
+        />
+      </View>
+
+      {/* Add Item Input */}
       <Input
         ref={addItemInputRef}
         placeholder="Add new item"
@@ -317,14 +440,33 @@ const ListScreen = () => {
         accessibilityLabel="Add new item input"
         accessibilityHint="Enter text to add a new item to the list"
       />
+
+      {/* Draggable FlatList with Active List Items */}
       <DraggableFlatList
-        data={combinedItems}
+        data={currentItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         onDragEnd={handleDragEnd}
         activationDistance={10}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.flatListContent}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No items in this list.</Text>
+          </View>
+        }
+        accessible={true}
+        accessibilityLabel="List items"
+        accessibilityHint="Displays the items of the active list"
+      />
+
+      {/* Confirmation Dialog for Deletion */}
+      <ConfirmationDialog
+        visible={isDeleteDialogVisible}
+        title="Confirm Deletion"
+        message="Are you sure you want to delete this list?"
+        onConfirm={confirmDeleteTab}
+        onCancel={cancelDeleteTab}
       />
     </View>
   );

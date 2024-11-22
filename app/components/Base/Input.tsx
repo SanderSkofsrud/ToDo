@@ -1,7 +1,14 @@
-import React, { forwardRef, useImperativeHandle, useRef, useMemo } from 'react';
+// src/components/Base/Input.tsx
+
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useMemo,
+} from 'react';
 import { TextInput, TextInputProps, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
-import { Theme } from '@/app/styles/theme';
+import { FontSizes, Spacing, BorderRadius } from '../../styles/theme';
 
 /**
  * Interface for input reference methods.
@@ -27,50 +34,57 @@ interface CustomTextInputProps extends TextInputProps {
  * @param ref - Reference to access clear and focus methods.
  * @returns A React functional component.
  */
-const Input = forwardRef<InputRef, CustomTextInputProps>((props, ref) => {
-  const inputRef = useRef<TextInput>(null);
-  const { theme } = useTheme();
+const InputComponent = forwardRef<InputRef, CustomTextInputProps>(
+  (props, ref) => {
+    const inputRef = useRef<TextInput>(null);
+    const { theme } = useTheme();
 
-  useImperativeHandle(ref, () => ({
-    clear: () => {
-      inputRef.current?.clear();
-    },
-    focus: () => {
-      inputRef.current?.focus();
-    },
-  }));
-
-  /**
-   * Generates styles based on the current theme.
-   * @param theme - The current theme object.
-   * @returns A StyleSheet object.
-   */
-  const getStyles = (theme: Theme) =>
-    StyleSheet.create({
-      input: {
-        backgroundColor: theme.mode === 'dark' ? 'rgba(49,48,48,0.5)' : '#F0F0F0',
-        borderWidth: 1,
-        borderColor: theme.gray[700],
-        borderRadius: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        color: theme.text,
+    // Expose clear and focus methods to parent components
+    useImperativeHandle(ref, () => ({
+      clear: () => {
+        inputRef.current?.clear();
       },
-    });
+      focus: () => {
+        inputRef.current?.focus();
+      },
+    }));
 
-  const styles = useMemo(() => getStyles(theme), [theme]);
+    /**
+     * Generates styles based on the current theme.
+     * @param theme - The current theme object.
+     * @returns A StyleSheet object.
+     */
+    const getStyles = (theme: any) =>
+      StyleSheet.create({
+        input: {
+          backgroundColor:
+            theme.mode === 'dark' ? 'rgba(49,48,48,0.5)' : '#F0F0F0',
+          borderWidth: 1,
+          borderColor: theme.gray[700],
+          borderRadius: BorderRadius.medium,
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          fontSize: FontSizes.medium,
+          color: theme.text,
+        },
+      });
 
-  return (
-    <TextInput
-      ref={inputRef}
-      style={[styles.input, props.style]}
-      placeholderTextColor={theme.gray[100]}
-      {...props}
-      accessible={true}
-      accessibilityLabel={props.placeholder || 'Input Field'}
-    />
-  );
-});
+    const styles = useMemo(() => getStyles(theme), [theme]);
 
-export default React.memo(Input);
+    return (
+      <TextInput
+        ref={inputRef}
+        style={[styles.input, props.style]}
+        placeholderTextColor={theme.gray[100]}
+        {...props}
+        accessible={true}
+        accessibilityLabel={props.placeholder || 'Input Field'}
+      />
+    );
+  }
+);
+
+// Properly wrap forwardRef inside React.memo
+const Input = React.memo(InputComponent);
+
+export default Input;

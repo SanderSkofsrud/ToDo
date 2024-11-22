@@ -1,11 +1,20 @@
+// src/context/ListContext.tsx
+
 import React, {
   createContext,
   useState,
   useEffect,
   ReactNode,
+  useContext,
   useCallback,
 } from 'react';
-import { saveData, loadData, deleteData } from '../../utils/storage';
+import {
+  saveListsToFile,
+  loadListsFromFile,
+  saveItemsToFile,
+  loadItemsFromFile,
+  deleteListFile,
+} from '@/utils/storage';
 
 /**
  * Interface representing an individual item in a list.
@@ -67,11 +76,11 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Loads lists from storage.
+   * Loads lists from the file system.
    */
   const loadLists = useCallback(async () => {
     try {
-      const storedLists = await loadData<List[]>('lists');
+      const storedLists = await loadListsFromFile();
       const initialLists = storedLists || [];
       setLists(initialLists);
     } catch (e) {
@@ -80,13 +89,13 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   /**
-   * Loads items for all lists from storage.
+   * Loads items for all lists from the file system.
    */
   const loadListItems = useCallback(async () => {
     const data: Record<string, Item[]> = {};
     for (const list of lists) {
       try {
-        const items = await loadData<Item[]>(list.id);
+        const items = await loadItemsFromFile(list.id);
         data[list.id] = items || [];
       } catch (e) {
         console.error(`Error loading items for list "${list.name}":`, e);
@@ -106,12 +115,12 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   }, [lists, loadListItems]);
 
   /**
-   * Saves the lists to storage.
+   * Saves the lists to the file system.
    * @param newLists - The updated lists.
    */
   const saveLists = useCallback(async (newLists: List[]) => {
     try {
-      await saveData('lists', newLists);
+      await saveListsToFile(newLists);
       setLists(newLists);
     } catch (e) {
       console.error('Error saving lists:', e);
@@ -142,7 +151,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
     async (listId: string) => {
       const newLists = lists.filter((l) => l.id !== listId);
       await saveLists(newLists);
-      await deleteData(listId);
+      await deleteListFile(listId);
       setListData((prevData) => {
         const newData = { ...prevData };
         delete newData[listId];
@@ -176,7 +185,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
     async (listId: string, text: string) => {
       const newItem: Item = { id: generateUniqueId(), text, completed: false };
       const updatedItems = [...(listData[listId] || []), newItem];
-      await saveData(listId, updatedItems);
+      await saveItemsToFile(listId, updatedItems);
       setListData((prevData) => ({
         ...prevData,
         [listId]: updatedItems,
@@ -198,7 +207,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
           ? { ...item, completed: !item.completed }
           : item
       );
-      await saveData(listId, updatedItems);
+      await saveItemsToFile(listId, updatedItems);
       setListData((prevData) => ({
         ...prevData,
         [listId]: updatedItems,
@@ -214,7 +223,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
    */
   const reorderItems = useCallback(
     async (listId: string, reorderedItems: Item[]) => {
-      await saveData(listId, reorderedItems);
+      await saveItemsToFile(listId, reorderedItems);
       setListData((prevData) => ({
         ...prevData,
         [listId]: reorderedItems,

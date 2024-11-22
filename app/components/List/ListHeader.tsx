@@ -1,82 +1,51 @@
-import React, { forwardRef, useRef, useEffect, useMemo } from 'react';
-import { TextInput, TextInputProps, StyleSheet } from 'react-native';
-import { FontSizes, Spacing } from '../../styles/theme';
+// components/List/ListHeader.tsx
+
+import React, { forwardRef } from 'react';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 /**
  * Props for the ListHeader component.
  */
-interface ListHeaderProps extends TextInputProps {
-  /** The current name of the list */
-  listName: string;
-  /** Callback function invoked when the list name changes */
-  onChangeName: (newName: string) => void;
-  /** Callback function invoked when submitting the list name */
-  onSubmit: () => void;
-  /** Function to set focus on the input field */
-  focusRef?: (focus: () => void) => void;
+interface ListHeaderProps {
+  /** Callback function invoked when the back button is pressed */
+  onBackPress: () => void;
 }
 
 /**
- * A header component for the list screen that allows editing the list name.
- * @param listName - Current name of the list.
- * @param onChangeName - Function to handle name changes.
- * @param onSubmit - Function to handle submission of the name.
- * @param focusRef - Function to set focus on the input.
- * @param props - Additional TextInput props.
- * @param ref - Reference to the TextInput.
+ * A header component containing only the back button.
+ * @param onBackPress - Function to handle back button press.
  * @returns A React functional component.
  */
-const ListHeader = forwardRef<TextInput, ListHeaderProps>(
-  ({ listName, onChangeName, onSubmit, focusRef, ...props }, ref) => {
-    const inputRef = useRef<TextInput>(null);
+const ListHeader = forwardRef<unknown, ListHeaderProps>(
+  ({ onBackPress }, ref) => {
     const { theme } = useTheme();
-
-    useEffect(() => {
-      if (focusRef) {
-        focusRef(() => {
-          inputRef.current?.focus();
-        });
-      }
-    }, [focusRef]);
 
     /**
      * Generates styles based on the current theme.
      * @param theme - The current theme object.
      * @returns A StyleSheet object.
      */
-    const getStyles = (theme: any) =>
-      StyleSheet.create({
-        headerTitle: {
-          color: theme.text,
-          fontSize: FontSizes.large,
-          fontWeight: 'bold',
-          flex: 1,
-          paddingVertical: Spacing.tiny,
-          paddingRight: 40, // Prevent overlapping with other header elements
-        },
-      });
-
-    const styles = useMemo(() => getStyles(theme), [theme]);
+    const styles = StyleSheet.create({
+      backButton: {
+        padding: 8, // Increase touchable area
+      },
+    });
 
     return (
-      <TextInput
-        ref={inputRef}
-        value={listName}
-        onChangeText={onChangeName}
-        onSubmitEditing={onSubmit}
-        onBlur={onSubmit}
-        placeholder="List Name"
-        placeholderTextColor={theme.gray[100]}
-        style={styles.headerTitle}
+      <TouchableOpacity
+        onPress={onBackPress}
+        style={styles.backButton}
         accessible={true}
-        accessibilityLabel="List Name Input"
-        accessibilityHint="Enter the name of the list"
-        {...props}
-      />
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        accessibilityHint="Navigates to the previous screen"
+      >
+      </TouchableOpacity>
     );
   }
 );
 
-// Memoize the component to prevent unnecessary re-renders
+// Properly wrap forwardRef inside React.memo
 export default React.memo(ListHeader);
