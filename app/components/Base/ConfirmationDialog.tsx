@@ -105,7 +105,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         fontWeight: '600',
       },
       confirmButtonText: {
-        color: theme.text,
+        color: "#FFFFFF",
         fontSize: FontSizes.medium,
         fontWeight: '600',
       },

@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.sanderskofsrud.ToDoList"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +39,19 @@
       "typedRoutes": true
     },
     "sdkVersion": "52.0.0",
-    "platforms": ["ios", "android", "web"]
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ce1aefe7-7aa4-47d1-a7e9-00236bb3a869"
+      }
+    },
+    "owner": "sanderskofsrud"
   }
 }

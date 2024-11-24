@@ -11,7 +11,7 @@ export interface Theme {
 
 export const lightTheme: Theme = {
   mode: 'light',
-  primary: '#2563EB',
+  primary: '#293F14',
   background: '#FFFFFF',
   text: '#000000',
   activeTabBackground: '#E0E0E0',
@@ -31,7 +31,7 @@ export const lightTheme: Theme = {
 
 export const darkTheme: Theme = {
   mode: 'dark',
-  primary: '#2563EB',
+  primary: '#293F14',
   background: '#121212',
   text: '#FFFFFF',
   activeTabBackground: '#333333',

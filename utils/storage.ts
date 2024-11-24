@@ -4,10 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { List, Item } from '@/app/context/ListContext';
 
+export const THEME_KEY = '@theme_preference';
+
 // Define a directory for storing lists
 const listsDir = FileSystem.documentDirectory + 'lists/';
 
-// Ensure the directory exists
+/**
+ * Ensures that the lists directory exists.
+ */
 const ensureListsDirExists = async () => {
     try {
         const dirInfo = await FileSystem.getInfoAsync(listsDir);
@@ -18,10 +22,6 @@ const ensureListsDirExists = async () => {
         console.error('Error ensuring lists directory exists:', e);
     }
 };
-
-/**
- * Existing AsyncStorage functions for settings
- */
 
 /**
  * Saves data to AsyncStorage under the specified key.
@@ -63,10 +63,6 @@ export const deleteData = async (key: string): Promise<void> => {
         console.error(`Error deleting data for key "${key}":`, e);
     }
 };
-
-/**
- * New File-Based Storage Functions for Lists and Items
- */
 
 /**
  * Returns the file path for the lists.json file.

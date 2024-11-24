@@ -1,3 +1,5 @@
+// src/screens/ListScreen.tsx
+
 import React, {
   useState,
   useEffect,
@@ -120,9 +122,18 @@ const ListScreen = () => {
   );
 
   /**
-   * Handler to finalize the list name update.
+   * Handler to finalize the list name update and focus the add item input.
    */
   const handleFinalizeListName = useCallback(() => {
+    debouncedUpdateListName.flush();
+    addItemInputRef.current?.focus(); // Focus the add item input
+  }, [debouncedUpdateListName]);
+
+  /**
+   * Handler to finalize the list name update without shifting focus.
+   * This is called when the input loses focus without submitting.
+   */
+  const handleBlurListName = useCallback(() => {
     debouncedUpdateListName.flush();
   }, [debouncedUpdateListName]);
 
@@ -300,17 +311,17 @@ const ListScreen = () => {
         marginBottom: Spacing.medium,
       },
       listNameInput: {
-        fontSize: FontSizes.xlarge,              // Increased text size
+        fontSize: FontSizes.xlarge, // Increased text size
         color: theme.text,
-        borderWidth: 0,                          // Ensure no border
-        paddingVertical: Spacing.medium,         // Increased height
+        borderWidth: 0, // Ensure no border
+        paddingVertical: Spacing.medium, // Increased height
         paddingHorizontal: Spacing.medium,
         backgroundColor: theme.activeTabBackground, // Matches active tab background
         borderBottomLeftRadius: BorderRadius.medium,
         borderBottomRightRadius: BorderRadius.medium,
       },
       flatListContent: {
-        paddingBottom: 100,
+        paddingBottom: Spacing.large, // Adjusted padding
         paddingTop: 20,
       },
       emptyContainer: {
@@ -418,7 +429,7 @@ const ListScreen = () => {
           value={listName}
           onChangeText={handleListNameChange}
           onSubmitEditing={handleFinalizeListName}
-          onBlur={handleFinalizeListName}
+          onBlur={handleBlurListName}
           placeholder="List Name"
           placeholderTextColor={theme.gray[400]}
           style={styles.listNameInput}
@@ -426,12 +437,13 @@ const ListScreen = () => {
           accessibilityLabel="List Name Input"
           accessibilityHint="Enter the name of the list"
           ref={focusListNameInput} // Correctly typed ref
+          blurOnSubmit={false} // Prevent automatic blur on submit
         />
       </View>
 
       {/* Add Item Input */}
       <Input
-        ref={addItemInputRef}
+        ref={addItemInputRef} // Assigning ref to Add Item Input
         placeholder="Add new item"
         onSubmitEditing={handleAddItem}
         returnKeyType="done"

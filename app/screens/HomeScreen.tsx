@@ -79,13 +79,15 @@ const HomeScreen = () => {
         fontSize: FontSizes.xlarge,
         fontWeight: 'bold',
         marginBottom: Spacing.small,
+        // Ensure the text doesn't wrap by setting flex properties
+        flexShrink: 1,
       },
       cardItemText: {
         color: theme.gray[300],
         fontSize: FontSizes.medium,
       },
       cardMoreText: {
-        color: theme.gray[500],
+        color: theme.gray[400],
         fontSize: FontSizes.small,
         marginTop: Spacing.small,
       },
@@ -198,7 +200,6 @@ const HomeScreen = () => {
     if (!selectedList) return;
     try {
       await removeList(selectedList.id);
-      Alert.alert('Success', 'The list has been deleted.');
     } catch (e) {
       console.error('Error deleting list:', e);
       Alert.alert('Error', 'Something went wrong while deleting the list.');
@@ -225,24 +226,24 @@ const HomeScreen = () => {
     (list: List) => {
       const items = listData[list.id] || [];
       const uncompletedItems = items.filter((i) => !i.completed);
-
-      // Calculate dynamic height based on the number of items
-      const baseHeight = 100; // Base height for the card
-      const additionalHeight = uncompletedItems.length * 20; // Additional height per item
-      const totalHeight = baseHeight + additionalHeight;
+      const remainingItemsCount = uncompletedItems.length - 5;
 
       return (
         <TouchableOpacity
           key={list.id}
           onPress={() => router.push(`/list/${list.id}`)}
           onLongPress={() => confirmDeleteList(list)}
-          style={[styles.card, { height: totalHeight }]}
+          style={styles.card} // Removed dynamic height
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel={`List: ${list.name || 'Unnamed'}`}
           accessibilityHint="Tap to open the list, long press to delete"
         >
-          <Text style={styles.cardTitle}>
+          <Text
+            style={styles.cardTitle}
+            numberOfLines={1} // Ensures the text is limited to one line
+            ellipsizeMode="tail" // Adds '...' at the end if the text is too long
+          >
             {list.name || 'Unnamed'}
           </Text>
           {uncompletedItems.slice(0, 5).map((listItem) => (
@@ -250,14 +251,17 @@ const HomeScreen = () => {
               {listItem.text}
             </Text>
           ))}
-          {uncompletedItems.length > 5 && (
-            <Text style={styles.cardMoreText}>+ more items...</Text>
+          {remainingItemsCount > 0 && (
+            <Text style={styles.cardMoreText}>
+              + {remainingItemsCount} more item{remainingItemsCount > 1 ? 's' : ''}
+            </Text>
           )}
         </TouchableOpacity>
       );
     },
     [confirmDeleteList, listData, router, styles.card, styles.cardItemText, styles.cardMoreText, styles.cardTitle]
   );
+
 
   /**
    * Renders each item in the StaggeredList.
@@ -295,18 +299,7 @@ const HomeScreen = () => {
 
         {filteredLists.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No lists available.</Text>
-            <TouchableOpacity
-              onPress={handleAddList}
-              style={styles.emptyButton}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Add new list"
-              accessibilityHint="Creates a new list"
-            >
-              <Ionicons name="add" size={20} color={theme.text} />
-              <Text style={styles.emptyButtonText}>Add a new list</Text>
-            </TouchableOpacity>
+            <Text style={styles.emptyText}>No lists available</Text>
           </View>
         ) : (
           <StaggeredList
@@ -314,16 +307,12 @@ const HomeScreen = () => {
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             animationType={'FADE_IN_FAST'}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: Spacing.large }}
             LoadingView={
               <View style={styles.activityIndicatorWrapper}>
                 <ActivityIndicator color={'black'} size={'large'} />
               </View>
             }
-            ListHeaderComponent={null} // Add if needed
-            ListEmptyComponent={null} // Already handled above
-            ListFooterComponent={null} // Add if needed
-            ListHeaderComponentStyle={undefined} // Add styles if needed
             containerStyle={{ flex: 1 }}
             numColumns={NUM_COLUMNS}
           />
@@ -337,7 +326,7 @@ const HomeScreen = () => {
           accessibilityLabel="Add new list"
           accessibilityHint="Creates a new list"
         >
-          <Ionicons name="add" size={32} color={theme.text} />
+          <Ionicons name="add" size={32} color={"#FFFFFF"} />
         </TouchableOpacity>
 
         <ConfirmationDialog
