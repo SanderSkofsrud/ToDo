@@ -97,7 +97,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setIsManual(true);
     saveData<string>(THEME_KEY, newScheme)
       .then(() => {
-        console.log(`Theme set to ${newScheme}`);
       })
       .catch((e) => {
         console.error('Error saving theme:', e);
@@ -113,7 +112,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setIsManual(false);
     saveData<string>(THEME_KEY, 'system')
       .then(() => {
-        console.log('Theme set to follow system');
       })
       .catch((e) => {
         console.error('Error saving system theme preference:', e);

@@ -1,40 +1,21 @@
-// src/screens/ListScreen.tsx
+// list/[listId].tsx
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useContext,
-  useCallback,
-  useMemo,
-  useLayoutEffect,
-} from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  Keyboard,
-  Text,
-} from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Input, { InputRef } from '../components/Base/Input';
-import ListItem from '../components/List/ListItem';
-import DraggableFlatList, {
-  RenderItemParams,
-} from 'react-native-draggable-flatlist';
-import { ListContext, Item, List } from '../context/ListContext';
+import ListContent from '../components/List/ListContent'; // Import the new ListContent component
+import { Item, List, ListContext } from '../context/ListContext';
 import { useTheme } from '../context/ThemeContext';
 import ListHeader from '../components/List/ListHeader';
 import ListTabs from '../components/List/ListTabs';
 import ConfirmationDialog from '../components/Base/ConfirmationDialog';
 import debounce from 'lodash.debounce';
-import { FontSizes, Spacing, BorderRadius } from '../styles/theme';
+import { BorderRadius, FontSizes, Spacing } from '../styles/theme';
 
 /**
- * Screen component for displaying and managing multiple lists with tabs.
- * Implements header configuration.
+ * Screen component for displaying and managing a specific list.
  */
 const ListScreen = () => {
   const { listId } = useLocalSearchParams<{ listId: string }>();
@@ -42,8 +23,9 @@ const ListScreen = () => {
   const [activeListId, setActiveListId] = useState<string>(listId);
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState<boolean>(false);
   const [listToDelete, setListToDelete] = useState<string | null>(null);
+  const [isClearCompletedDialogVisible, setClearCompletedDialogVisible] = useState<boolean>(false);
   const addItemInputRef = useRef<InputRef>(null);
-  const focusListNameInput = useRef<InputRef>(null); // Corrected ref type
+  const focusListNameInput = useRef<InputRef>(null);
   const router = useRouter();
   const navigation = useNavigation();
   const {
@@ -52,11 +34,17 @@ const ListScreen = () => {
     addItem,
     listData,
     toggleItem,
+    updateItemName,
     reorderItems,
     addList,
     removeList,
   } = useContext(ListContext)!;
   const { theme } = useTheme();
+
+  /**
+   * State to manage the visibility of completed items.
+   */
+  const [showCompleted, setShowCompleted] = useState<boolean>(true);
 
   /**
    * Loads the current list details based on activeListId.
@@ -69,7 +57,7 @@ const ListScreen = () => {
         if (list.name === '') {
           // Focus the list name input field if name is empty
           setTimeout(() => {
-            focusListNameInput.current?.focus(); // Updated method call
+            focusListNameInput.current?.focus();
           }, 100);
         }
       } else {
@@ -126,7 +114,7 @@ const ListScreen = () => {
    */
   const handleFinalizeListName = useCallback(() => {
     debouncedUpdateListName.flush();
-    addItemInputRef.current?.focus(); // Focus the add item input
+    addItemInputRef.current?.focus();
   }, [debouncedUpdateListName]);
 
   /**
@@ -167,6 +155,7 @@ const ListScreen = () => {
     async (itemId: string) => {
       try {
         await toggleItem(activeListId, itemId);
+        Vibration.vibrate(30);
       } catch (e) {
         console.error('Error toggling item:', e);
         Alert.alert('Error', 'Failed to toggle the item.');
@@ -176,37 +165,20 @@ const ListScreen = () => {
   );
 
   /**
-   * Handler to reorder items in the active list.
-   * @param data - The reordered items array.
+   * Handler to update the name of an item.
+   * @param itemId - The ID of the item.
+   * @param newName - The new name for the item.
    */
-  const handleDragEnd = useCallback(
-    async ({ data }: { data: Item[] }) => {
+  const handleUpdateItemName = useCallback(
+    async (itemId: string, newName: string) => {
       try {
-        await reorderItems(activeListId, data);
+        await updateItemName(activeListId, itemId, newName);
       } catch (e) {
-        console.error('Error saving reordered items:', e);
-        Alert.alert('Error', 'Failed to reorder items.');
+        console.error('Error updating item name:', e);
+        Alert.alert('Error', 'Failed to update the item name.');
       }
     },
-    [reorderItems, activeListId]
-  );
-
-  /**
-   * Renders each item in the DraggableFlatList.
-   * @param param0 - Render item parameters.
-   * @returns A ListItem component.
-   */
-  const renderItem = useCallback(
-    ({ item, drag, isActive }: RenderItemParams<Item>) => (
-      <ListItem
-        text={item.text}
-        completed={item.completed}
-        onPress={() => handleToggleItem(item.id)}
-        onLongPress={drag}
-        dragging={isActive}
-      />
-    ),
-    [handleToggleItem]
+    [updateItemName, activeListId]
   );
 
   /**
@@ -282,6 +254,35 @@ const ListScreen = () => {
   );
 
   /**
+   * Handler to clear all completed items.
+   */
+  const clearCompletedItems = useCallback(() => {
+    setClearCompletedDialogVisible(true);
+  }, []);
+
+  /**
+   * Handler to confirm clearing completed items.
+   */
+  const confirmClearCompletedItems = useCallback(async () => {
+    try {
+      const currentItems = listData[activeListId] || [];
+      const filteredItems = currentItems.filter((item) => !item.completed);
+      await reorderItems(activeListId, filteredItems);
+      setClearCompletedDialogVisible(false);
+    } catch (e) {
+      console.error('Error clearing completed items:', e);
+      Alert.alert('Error', 'Failed to clear completed items.');
+    }
+  }, [listData, activeListId, reorderItems]);
+
+  /**
+   * Handler to cancel clearing completed items.
+   */
+  const cancelClearCompletedItems = useCallback(() => {
+    setClearCompletedDialogVisible(false);
+  }, []);
+
+  /**
    * Generates styles based on the current theme.
    * @param theme - The current theme object.
    * @returns A StyleSheet object.
@@ -294,19 +295,9 @@ const ListScreen = () => {
         paddingHorizontal: Spacing.medium,
         backgroundColor: theme.background,
       },
-      headerLeftIcon: {
-        padding: 8, // Increase touchable area
-        zIndex: 10, // Ensure it's on top
-      },
       tabsContainer: {
         marginTop: Spacing.small,
-        // Removed any border or padding that might introduce space
       },
-      // Removed the divider style as it's no longer needed
-      // divider: {
-      //   height: 1,
-      //   backgroundColor: theme.gray[700],
-      // },
       listNameContainer: {
         marginBottom: Spacing.medium,
       },
@@ -319,10 +310,6 @@ const ListScreen = () => {
         backgroundColor: theme.activeTabBackground, // Matches active tab background
         borderBottomLeftRadius: BorderRadius.medium,
         borderBottomRightRadius: BorderRadius.medium,
-      },
-      flatListContent: {
-        paddingBottom: Spacing.large, // Adjusted padding
-        paddingTop: 20,
       },
       emptyContainer: {
         flex: 1,
@@ -366,25 +353,54 @@ const ListScreen = () => {
       },
       headerTintColor: theme.text,
     });
+    // Removed styles.headerLeftIcon from dependencies as it's not defined
   }, [
     navigation,
     router,
     theme,
-    styles.headerLeftIcon,
+    // styles.headerLeftIcon, // Removed
   ]);
 
   /**
-   * Get items for the active list
-   * Sort them so that incomplete items come first, followed by completed items.
-   * Maintain original order within each group.
+   * Separate incomplete and completed items.
    */
-  const currentItems = useMemo(() => {
+  const incompleteItems = useMemo(() => {
     const items = listData[activeListId] || [];
-    return items.slice().sort((a, b) => {
-      if (a.completed === b.completed) return 0;
-      return a.completed ? 1 : -1;
-    });
+    return items.filter((item) => !item.completed);
   }, [listData, activeListId]);
+
+  const completedItems = useMemo(() => {
+    const items = listData[activeListId] || [];
+    return items.filter((item) => item.completed);
+  }, [listData, activeListId]);
+
+  /**
+   * Determine if the divider should be shown.
+   * Only show if there are both incompleted and completed items.
+   */
+  const showDivider = useMemo(() => incompleteItems.length > 0 && completedItems.length > 0, [incompleteItems, completedItems]);
+
+  /**
+   * Handler to toggle the visibility of completed items.
+   */
+  const toggleShowCompleted = useCallback(() => {
+    setShowCompleted((prev) => !prev);
+  }, []);
+
+  /**
+   * Define a handler for reorderItems that matches the expected signature.
+   */
+  const handleReorderItems = useCallback(
+    async (newOrder: Item[]) => {
+      try {
+        await reorderItems(activeListId, newOrder);
+      } catch (e) {
+        console.error('Error reordering items:', e);
+        Alert.alert('Error', 'Failed to reorder items.');
+      }
+    },
+    [reorderItems, activeListId]
+  );
 
   /**
    * Handle the case when there are no lists.
@@ -419,8 +435,6 @@ const ListScreen = () => {
           onAddTab={handleAddListTab}
           onDeleteTab={handleDeleteTab}
         />
-        {/* Removed the divider to eliminate space and border */}
-        {/* <View style={styles.divider} /> */}
       </View>
 
       {/* Editable List Name */}
@@ -436,14 +450,14 @@ const ListScreen = () => {
           accessible={true}
           accessibilityLabel="List Name Input"
           accessibilityHint="Enter the name of the list"
-          ref={focusListNameInput} // Correctly typed ref
-          blurOnSubmit={false} // Prevent automatic blur on submit
+          ref={focusListNameInput}
+          blurOnSubmit={false}
         />
       </View>
 
       {/* Add Item Input */}
       <Input
-        ref={addItemInputRef} // Assigning ref to Add Item Input
+        ref={addItemInputRef}
         placeholder="Add new item"
         onSubmitEditing={handleAddItem}
         returnKeyType="done"
@@ -453,23 +467,26 @@ const ListScreen = () => {
         accessibilityHint="Enter text to add a new item to the list"
       />
 
-      {/* Draggable FlatList with Active List Items */}
-      <DraggableFlatList
-        data={currentItems}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        onDragEnd={handleDragEnd}
-        activationDistance={10}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.flatListContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No items in this list.</Text>
-          </View>
-        }
-        accessible={true}
-        accessibilityLabel="List items"
-        accessibilityHint="Displays the items of the active list"
+      {/* List Content */}
+      <ListContent
+        activeListId={activeListId}
+        incompleteItems={incompleteItems}
+        completedItems={completedItems}
+        showCompleted={showCompleted}
+        toggleShowCompleted={toggleShowCompleted}
+        clearCompletedItems={clearCompletedItems}
+        handleToggleItem={handleToggleItem}
+        handleUpdateItemName={handleUpdateItemName}
+        reorderItems={handleReorderItems} // Pass handleReorderItems
+      />
+
+      {/* Confirmation Dialog for Clearing Completed Items */}
+      <ConfirmationDialog
+        visible={isClearCompletedDialogVisible}
+        title="Confirm Clear"
+        message="Are you sure you want to delete all completed items?"
+        onConfirm={confirmClearCompletedItems}
+        onCancel={cancelClearCompletedItems}
       />
 
       {/* Confirmation Dialog for Deletion */}

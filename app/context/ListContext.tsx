@@ -44,7 +44,9 @@ interface ListContextProps {
   updateListName: (id: string, newName: string) => Promise<void>;
   addItem: (listId: string, text: string) => Promise<void>;
   toggleItem: (listId: string, itemId: string) => Promise<void>;
+  updateItemName: (listId: string, itemId: string, newName: string) => Promise<void>;
   reorderItems: (listId: string, reorderedItems: Item[]) => Promise<void>;
+  clearCompletedItems: (listId: string) => Promise<void>;
   loadLists: () => Promise<void>;
   loadListItems: () => Promise<void>;
 }
@@ -162,6 +164,23 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   );
 
   /**
+   * Bulk deletes completed items from a list.
+   * @param listId - The ID of the list.
+   */
+  const clearCompletedItems = useCallback(
+    async (listId: string) => {
+      const currentItems = listData[listId] || [];
+      const filteredItems = currentItems.filter((item) => !item.completed);
+      await saveItemsToFile(listId, filteredItems);
+      setListData((prevData) => ({
+        ...prevData,
+        [listId]: filteredItems,
+      }));
+    },
+    [listData]
+  );
+
+  /**
    * Updates the name of a list.
    * @param listId - The ID of the list to update.
    * @param newName - The new name for the list.
@@ -217,6 +236,29 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
   );
 
   /**
+   * Updates the name of an item.
+   * @param listId - The ID of the list.
+   * @param itemId - The ID of the item.
+   * @param newName - The new name for the item.
+   */
+  const updateItemName = useCallback(
+    async (listId: string, itemId: string, newName: string) => {
+      const currentItems = listData[listId] || [];
+      const updatedItems = currentItems.map((item) =>
+        item.id === itemId
+          ? { ...item, text: newName }
+          : item
+      );
+      await saveItemsToFile(listId, updatedItems);
+      setListData((prevData) => ({
+        ...prevData,
+        [listId]: updatedItems,
+      }));
+    },
+    [listData]
+  );
+
+  /**
    * Reorders items in a list.
    * @param listId - The ID of the list.
    * @param reorderedItems - The reordered items array.
@@ -242,7 +284,9 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
         updateListName,
         addItem,
         toggleItem,
+        updateItemName, // Added updateItemName
         reorderItems,
+        clearCompletedItems,
         loadLists,
         loadListItems,
       }}
