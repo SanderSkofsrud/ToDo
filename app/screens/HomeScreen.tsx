@@ -177,7 +177,7 @@ const HomeScreen = () => {
   const handleAddList = useCallback(async () => {
     try {
       const newListId = await addList(''); // Create list with empty name
-      router.push(`/list/${newListId}`);
+      router.push(`/screens/list/${newListId}`);
     } catch (e) {
       console.error('Error adding list:', e);
       Alert.alert('Error', 'Something went wrong while creating the list.');
@@ -231,7 +231,7 @@ const HomeScreen = () => {
       return (
         <TouchableOpacity
           key={list.id}
-          onPress={() => router.push(`/list/${list.id}`)}
+          onPress={() => router.push(`/screens/list/${list.id}`)}
           onLongPress={() => confirmDeleteList(list)}
           style={styles.card} // Removed dynamic height
           accessible={true}

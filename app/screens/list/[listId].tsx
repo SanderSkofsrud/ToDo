@@ -4,15 +4,15 @@ import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, us
 import { Alert, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Input, { InputRef } from '../components/Base/Input';
-import ListContent from '../components/List/ListContent'; // Import the new ListContent component
-import { Item, List, ListContext } from '../context/ListContext';
-import { useTheme } from '../context/ThemeContext';
-import ListHeader from '../components/List/ListHeader';
-import ListTabs from '../components/List/ListTabs';
-import ConfirmationDialog from '../components/Base/ConfirmationDialog';
+import Input, { InputRef } from '../../components/Base/Input';
+import ListContent from '../../components/List/ListContent'; // Import the new ListContent component
+import { Item, List, ListContext } from '../../context/ListContext';
+import { useTheme } from '../../context/ThemeContext';
+import ListHeader from '../../components/List/ListHeader';
+import ListTabs from '../../components/List/ListTabs';
+import ConfirmationDialog from '../../components/Base/ConfirmationDialog';
 import debounce from 'lodash.debounce';
-import { BorderRadius, FontSizes, Spacing } from '../styles/theme';
+import { BorderRadius, FontSizes, Spacing } from '../../styles/theme';
 
 /**
  * Screen component for displaying and managing a specific list.
