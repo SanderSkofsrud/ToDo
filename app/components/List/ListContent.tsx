@@ -1,5 +1,3 @@
-// src/components/List/ListContent.tsx
-
 import React, { useCallback, useMemo } from 'react';
 import {
   View,
@@ -25,7 +23,7 @@ interface ListContentProps {
   clearCompletedItems: () => void;
   handleToggleItem: (itemId: string) => void;
   handleUpdateItemName: (itemId: string, newName: string) => void;
-  reorderItems: (newOrder: Item[]) => Promise<void>; // Updated type
+  reorderItems: (newOrder: Item[]) => Promise<void>;
 }
 
 const ListContent: React.FC<ListContentProps> = ({
@@ -49,7 +47,6 @@ const ListContent: React.FC<ListContentProps> = ({
     const hasCompleted = completedItems.length > 0;
 
     if (incompleteItems.length > 0 && hasCompleted) {
-      // Insert a non-draggable divider item
       data.push({
         id: 'divider',
         text: '',
@@ -89,7 +86,7 @@ const ListContent: React.FC<ListContentProps> = ({
           onPress={() => handleToggleItem(item.id)}
           onLongPress={drag}
           dragging={isActive}
-          onDrag={drag} // Pass drag function to ListItem for move icon
+          onDrag={drag}
           onUpdateName={(newName: string) => handleUpdateItemName(item.id, newName)}
         />
       );
@@ -109,7 +106,6 @@ const ListContent: React.FC<ListContentProps> = ({
    */
   const handleDragEnd = useCallback(
     async ({ data }: { data: Item[] }) => {
-      // Filter out the divider before saving
       const filteredData = data.filter(item => item.id !== 'divider');
       await reorderItems(filteredData);
     },

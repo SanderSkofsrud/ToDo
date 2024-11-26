@@ -33,15 +33,12 @@ export const useCommonStyles = () => {
         } as TextStyle,
         textInput: {
           backgroundColor: 'rgba(31, 31, 31, 0.5)',
-          //borderWidth: 1,
-          //borderColor: theme.gray[700],
           borderRadius: BorderRadius.medium,
           paddingVertical: Spacing.small,
           paddingHorizontal: Spacing.medium,
           fontSize: FontSizes.medium,
           color: theme.text,
         } as TextStyle,
-        // Add more reusable styles as needed
       }),
     [theme]
   );

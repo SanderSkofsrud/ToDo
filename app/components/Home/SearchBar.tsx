@@ -53,7 +53,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onChangeText, style, child
         fontSize: FontSizes.medium,
       },
       toggleButton: {
-        padding: 8, // Increase touchable area
+        padding: 8,
         marginLeft: Spacing.small,
       },
     });

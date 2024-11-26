@@ -1,5 +1,3 @@
-// src/context/ThemeContext.tsx
-
 import React, {
   createContext,
   useState,
@@ -8,7 +6,7 @@ import React, {
   useContext,
   useMemo,
 } from 'react';
-import { Appearance, ColorSchemeName } from 'react-native'; // Removed AppearancePreferences
+import { Appearance, ColorSchemeName } from 'react-native';
 import { lightTheme, darkTheme, Theme } from '../styles/theme';
 import { loadData, saveData, THEME_KEY } from '@/utils/storage';
 
@@ -60,7 +58,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (e) {
         console.error('Error loading theme:', e);
-        // Fallback to system preference
         setColorScheme(systemColorScheme || 'dark');
         setIsManual(false);
       } finally {
@@ -70,9 +67,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     initializeTheme();
 
-    const subscription = Appearance.addChangeListener(({ colorScheme }) => { // Removed AppearancePreferences
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
       if (!isManual) {
-        // If user hasn't manually set the theme, follow system changes
         setColorScheme(colorScheme || 'dark');
       }
     });
@@ -89,7 +85,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (isManual) {
       newScheme = colorScheme === 'dark' ? 'light' : 'dark';
     } else {
-      // If not manually set, default to 'dark'
       newScheme = 'dark';
       setIsManual(true);
     }

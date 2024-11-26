@@ -1,5 +1,3 @@
-// src/context/ListContext.tsx
-
 import React, {
   createContext,
   useState,
@@ -284,7 +282,7 @@ export const ListProvider = ({ children }: { children: ReactNode }) => {
         updateListName,
         addItem,
         toggleItem,
-        updateItemName, // Added updateItemName
+        updateItemName,
         reorderItems,
         clearCompletedItems,
         loadLists,

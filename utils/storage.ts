@@ -1,12 +1,9 @@
-// src/utils/storage.ts
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { List, Item } from '@/app/context/ListContext';
 
 export const THEME_KEY = '@theme_preference';
 
-// Define a directory for storing lists
 const listsDir = FileSystem.documentDirectory + 'lists/';
 
 /**

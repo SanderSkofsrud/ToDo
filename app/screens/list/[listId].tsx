@@ -1,11 +1,9 @@
-// list/[listId].tsx
-
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Input, { InputRef } from '../../components/Base/Input';
-import ListContent from '../../components/List/ListContent'; // Import the new ListContent component
+import ListContent from '../../components/List/ListContent';
 import { Item, List, ListContext } from '../../context/ListContext';
 import { useTheme } from '../../context/ThemeContext';
 import ListHeader from '../../components/List/ListHeader';
@@ -55,7 +53,6 @@ const ListScreen = () => {
       if (list) {
         setListName(list.name);
         if (list.name === '') {
-          // Focus the list name input field if name is empty
           setTimeout(() => {
             focusListNameInput.current?.focus();
           }, 100);
@@ -186,7 +183,7 @@ const ListScreen = () => {
    */
   const handleAddListTab = useCallback(async () => {
     try {
-      const newListId = await addList(''); // Create a list with an empty name
+      const newListId = await addList('');
       setActiveListId(newListId);
     } catch (e) {
       console.error('Error adding new list:', e);
@@ -224,7 +221,6 @@ const ListScreen = () => {
       await removeList(listToDelete);
       setDeleteDialogVisible(false);
       setListToDelete(null);
-      // Optionally, set activeListId to another list
       if (lists.length > 1) {
         const remainingLists = lists.filter((l) => l.id !== listToDelete);
         setActiveListId(remainingLists[0].id);
@@ -243,7 +239,6 @@ const ListScreen = () => {
     setListToDelete(null);
   }, []);
 
-  // Get all tabs from the lists context
   const tabs = useMemo(
     () =>
       lists.map((list: List) => ({
@@ -302,12 +297,12 @@ const ListScreen = () => {
         marginBottom: Spacing.medium,
       },
       listNameInput: {
-        fontSize: FontSizes.xlarge, // Increased text size
+        fontSize: FontSizes.xlarge,
         color: theme.text,
-        borderWidth: 0, // Ensure no border
-        paddingVertical: Spacing.medium, // Increased height
+        borderWidth: 0,
+        paddingVertical: Spacing.medium,
         paddingHorizontal: Spacing.medium,
-        backgroundColor: theme.activeTabBackground, // Matches active tab background
+        backgroundColor: theme.activeTabBackground,
         borderBottomLeftRadius: BorderRadius.medium,
         borderBottomRightRadius: BorderRadius.medium,
       },
@@ -353,12 +348,10 @@ const ListScreen = () => {
       },
       headerTintColor: theme.text,
     });
-    // Removed styles.headerLeftIcon from dependencies as it's not defined
   }, [
     navigation,
     router,
     theme,
-    // styles.headerLeftIcon, // Removed
   ]);
 
   /**
@@ -477,7 +470,7 @@ const ListScreen = () => {
         clearCompletedItems={clearCompletedItems}
         handleToggleItem={handleToggleItem}
         handleUpdateItemName={handleUpdateItemName}
-        reorderItems={handleReorderItems} // Pass handleReorderItems
+        reorderItems={handleReorderItems}
       />
 
       {/* Confirmation Dialog for Clearing Completed Items */}

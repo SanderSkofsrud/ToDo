@@ -1,5 +1,3 @@
-// components/List/ListHeader.tsx
-
 import React, { forwardRef } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
@@ -29,7 +27,7 @@ const ListHeader = forwardRef<unknown, ListHeaderProps>(
      */
     const styles = StyleSheet.create({
       backButton: {
-        padding: 8, // Increase touchable area
+        padding: 8,
       },
     });
 
@@ -47,5 +45,4 @@ const ListHeader = forwardRef<unknown, ListHeaderProps>(
   }
 );
 
-// Properly wrap forwardRef inside React.memo
 export default React.memo(ListHeader);

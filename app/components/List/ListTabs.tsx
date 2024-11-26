@@ -1,5 +1,3 @@
-// components/List/ListTabs.tsx
-
 import React from 'react';
 import {
   ScrollView,
@@ -75,10 +73,10 @@ const ListTabs: React.FC<ListTabsProps> = ({
         borderTopLeftRadius: BorderRadius.medium,
         borderTopRightRadius: BorderRadius.medium,
         marginRight: Spacing.small,
-        backgroundColor: theme.background, // Inactive tabs blend with background
+        backgroundColor: theme.background,
       } as ViewStyle,
       activeTab: {
-        backgroundColor: theme.activeTabBackground, // Active tab background
+        backgroundColor: theme.activeTabBackground,
       } as ViewStyle,
       tabText: {
         fontSize: FontSizes.medium,
@@ -111,7 +109,7 @@ const ListTabs: React.FC<ListTabsProps> = ({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
         flexDirection: 'row',
-        alignItems: 'flex-start', // Changed from 'center' to 'flex-start'
+        alignItems: 'flex-start',
       }}
     >
       {tabs.map((tab) => {

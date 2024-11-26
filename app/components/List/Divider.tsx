@@ -1,5 +1,3 @@
-// src/components/List/Divider.tsx
-
 import React from 'react';
 import {
   View,
@@ -65,7 +63,7 @@ const Divider: React.FC<DividerProps> = ({
         alignItems: 'center',
       } as ViewStyle,
       toggleButton: {
-        flexDirection: 'row', // Ensure horizontal alignment
+        flexDirection: 'row',
         alignItems: 'center',
       } as ViewStyle,
       title: {
@@ -100,7 +98,7 @@ const Divider: React.FC<DividerProps> = ({
       <View style={styles.leftSection}>
         <TouchableOpacity
           onPress={onToggleExpand}
-          style={styles.toggleButton} // Apply the new style here
+          style={styles.toggleButton}
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel={

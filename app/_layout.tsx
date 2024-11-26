@@ -1,5 +1,3 @@
-// src/app/layout.tsx
-
 import React from 'react';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -14,7 +12,6 @@ function RootLayoutInner() {
   const { isThemeLoaded } = useTheme();
 
   if (!isThemeLoaded) {
-    // Show a loading indicator while the theme is loading
     return (
       <GestureHandlerRootView style={styles.gestureHandler}>
         <View style={styles.loadingContainer}>

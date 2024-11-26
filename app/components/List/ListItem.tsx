@@ -1,5 +1,3 @@
-// src/components/List/ListItem.tsx
-
 import React, { useState, useRef, useCallback, memo } from 'react';
 import {
   TouchableOpacity,

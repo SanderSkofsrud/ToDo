@@ -1,5 +1,3 @@
-// src/screens/HomeScreen.tsx
-
 import React, { useContext, useCallback, useState, useMemo } from 'react';
 import {
   View,
@@ -20,11 +18,11 @@ import { ListContext, List } from '../context/ListContext';
 import { FontSizes, Spacing, BorderRadius } from '../styles/theme';
 import ConfirmationDialog from '../components/Base/ConfirmationDialog';
 import { useTheme } from '../context/ThemeContext';
-import StaggeredList from '@mindinventory/react-native-stagger-view'; // Import the library
+import StaggeredList from '@mindinventory/react-native-stagger-view';
 
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = Spacing.small;
-const NUM_COLUMNS = 2; // Number of columns in the grid
+const NUM_COLUMNS = 2;
 
 /**
  * Home screen component displaying all lists with search and add functionality.
@@ -66,8 +64,7 @@ const HomeScreen = () => {
         borderColor: theme.gray[700],
         borderWidth: 3,
         backgroundColor: theme.activeTabBackground,
-        margin: CARD_MARGIN / 2, // Adjusted margin for grid spacing
-        // Optional: Add shadow or elevation for better visual
+        margin: CARD_MARGIN / 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
@@ -79,7 +76,6 @@ const HomeScreen = () => {
         fontSize: FontSizes.xlarge,
         fontWeight: 'bold',
         marginBottom: Spacing.small,
-        // Ensure the text doesn't wrap by setting flex properties
         flexShrink: 1,
       },
       cardItemText: {
@@ -176,7 +172,7 @@ const HomeScreen = () => {
    */
   const handleAddList = useCallback(async () => {
     try {
-      const newListId = await addList(''); // Create list with empty name
+      const newListId = await addList('');
       router.push(`/screens/list/${newListId}`);
     } catch (e) {
       console.error('Error adding list:', e);
@@ -233,7 +229,7 @@ const HomeScreen = () => {
           key={list.id}
           onPress={() => router.push(`/screens/list/${list.id}`)}
           onLongPress={() => confirmDeleteList(list)}
-          style={styles.card} // Removed dynamic height
+          style={styles.card}
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel={`List: ${list.name || 'Unnamed'}`}
@@ -241,8 +237,8 @@ const HomeScreen = () => {
         >
           <Text
             style={styles.cardTitle}
-            numberOfLines={1} // Ensures the text is limited to one line
-            ellipsizeMode="tail" // Adds '...' at the end if the text is too long
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {list.name || 'Unnamed'}
           </Text>

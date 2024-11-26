@@ -1,5 +1,3 @@
-// src/components/Base/Input.tsx
-
 import React, {
   forwardRef,
   useImperativeHandle,
@@ -39,7 +37,6 @@ const InputComponent = forwardRef<InputRef, CustomTextInputProps>(
     const inputRef = useRef<TextInput>(null);
     const { theme } = useTheme();
 
-    // Expose clear and focus methods to parent components
     useImperativeHandle(ref, () => ({
       clear: () => {
         inputRef.current?.clear();
@@ -84,7 +81,6 @@ const InputComponent = forwardRef<InputRef, CustomTextInputProps>(
   }
 );
 
-// Properly wrap forwardRef inside React.memo
 const Input = React.memo(InputComponent);
 
 export default Input;
